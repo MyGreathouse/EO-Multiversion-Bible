@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-theme="day">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EO Multiversion Bible — Read. Study. Reflect.</title>
+<meta name="description" content="EO Multiversion Bible: the complete Old and New Testaments in five translations — BSB, WEB-BE, ASV, Webster’s, and YLT. Read, search and study Scripture. Works offline. No account needed.">
+<meta name="theme-color" content="#F5F5F5">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="EO Multiversion Bible">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="preload" href="assets/fonts/literata.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="data/canon.json" as="fetch" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+
+<style>
+  /* Splash: shown until the canon loads, then removed. */
+  #splash {
+    position: fixed; inset: 0; z-index: 90; display: grid; place-content: center;
+    justify-items: center; gap: 1rem; background: var(--bg); color: var(--brand);
+  }
+  #splash .monogram { width: 4rem; }
+  #splash p { color: var(--text-3); font-size: .6875rem; letter-spacing: .22em;
+    text-transform: uppercase; font-weight: 650; }
+</style>
+</head>
+<body>
+
+<button type="button" class="skip-link" id="skip-link">Skip to content</button>
+
+<div id="splash">
+  <svg class="monogram" viewBox="0 0 460 380" role="img" aria-label="EO Multiversion Bible" xmlns="http://www.w3.org/2000/svg"><defs><mask id="eo-splash"><rect width="460" height="380" fill="#fff"/><rect x="122" y="167" width="66" height="46" fill="#000"/></mask></defs><g fill="none" stroke="currentColor" stroke-width="30" stroke-linejoin="miter"><circle cx="286" cy="190" r="132" mask="url(#eo-splash)"/><path d="M175 58 H60 V322 H175"/><path d="M60 190 H300"/></g></svg>
+  <p>EO Multiversion Bible</p>
+</div>
+
+<div class="app">
+
+  <header class="topbar">
+    <button type="button" id="brand-btn" class="icon-btn" aria-label="EO Multiversion Bible home" style="color:var(--brand)">
+      <svg viewBox="0 0 460 380" aria-hidden="true" style="width:1.7rem;height:1.7rem" xmlns="http://www.w3.org/2000/svg"><defs><mask id="eo-top"><rect width="460" height="380" fill="#fff"/><rect x="122" y="167" width="66" height="46" fill="#000"/></mask></defs><g fill="none" stroke="currentColor" stroke-width="30" stroke-linejoin="miter"><circle cx="286" cy="190" r="132" mask="url(#eo-top)"/><path d="M175 58 H60 V322 H175"/><path d="M60 190 H300"/></g></svg>
+    </button>
+    <h1 class="topbar__title" id="view-title">EO Multiversion Bible</h1>
+    <div class="topbar__spacer"></div>
+    <button id="translation-btn" class="btn" style="padding:.4rem .7rem; font-size:.75rem; letter-spacing:.06em"
+            aria-label="Change translation. Keeps your place.">BSB</button>
+  </header>
+
+
+  <main id="outlet" class="view" tabindex="-1"></main>
+
+  <nav class="nav" aria-label="Main">
+    <button type="button" class="nav__item" data-route="/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.2 12 3l9 7.2V21H14v-6h-4v6H3z"/></svg>
+      <span>Home</span>
+    </button>
+    <button type="button" class="nav__item" data-route="/library">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18H6.5A2.5 2.5 0 0 0 4 22z"/><path d="M20 16H6.5"/></svg>
+      <span>Bible</span>
+    </button>
+    <button type="button" class="nav__item" data-route="/search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <span>Search</span>
+    </button>
+    <button type="button" class="nav__item" data-route="/study">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v11L12 21l8-3.5v-11z"/><path d="M12 10.5v10.5"/><path d="M4 6.5 12 10.5l8-4"/></svg>
+      <span>Study</span>
+    </button>
+    <button type="button" class="nav__item" data-route="/settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2.6"/><path d="M10.3 3.2a1 1 0 0 1 1-.8h1.4a1 1 0 0 1 1 .8l.2 1.3a7 7 0 0 1 1.5.9l1.2-.5a1 1 0 0 1 1.2.4l.7 1.2a1 1 0 0 1-.2 1.3l-1 .8a7 7 0 0 1 0 1.8l1 .8a1 1 0 0 1 .2 1.3l-.7 1.2a1 1 0 0 1-1.2.4l-1.2-.5a7 7 0 0 1-1.5.9l-.2 1.3a1 1 0 0 1-1 .8h-1.4a1 1 0 0 1-1-.8l-.2-1.3a7 7 0 0 1-1.5-.9l-1.2.5a1 1 0 0 1-1.2-.4l-.7-1.2a1 1 0 0 1 .2-1.3l1-.8a7 7 0 0 1 0-1.8l-1-.8a1 1 0 0 1-.2-1.3l.7-1.2a1 1 0 0 1 1.2-.4l1.2.5a7 7 0 0 1 1.5-.9z"/></svg>
+      <span>Settings</span>
+    </button>
+  </nav>
+
+</div>
+
+<noscript>
+  <div class="view">
+    <p>EO Multiversion Bible needs JavaScript to read Scripture from your device. Please enable it and reload.</p>
+  </div>
+</noscript>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
