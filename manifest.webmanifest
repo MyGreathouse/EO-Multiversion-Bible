@@ -1,0 +1,27 @@
+{
+  "name": "EO Multiversion Bible — Read. Study. Reflect.",
+  "short_name": "EO Bible",
+  "description": "The complete Old and New Testaments in five translations — BSB, WEB-BE, ASV, Webster’s, and YLT. Read, search and study Scripture offline, with no account.",
+  "id": "/",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#F5F5F5",
+  "theme_color": "#1B2A4A",
+  "lang": "en-GB",
+  "dir": "ltr",
+  "categories": ["books", "education", "lifestyle"],
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Continue reading", "url": "#/", "description": "Pick up where you left off" },
+    { "name": "Search Scripture", "url": "#/search", "description": "Search the whole Bible" },
+    { "name": "My study", "url": "#/study", "description": "Bookmarks, highlights and notes" }
+  ]
+}
