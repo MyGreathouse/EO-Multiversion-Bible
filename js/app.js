@@ -187,6 +187,17 @@ window.addEventListener('hashchange', () => {
   }
   document.getElementById('splash')?.remove();
   if (typeof window.__EO_BOOTED === 'function') window.__EO_BOOTED();
+
+  // Registered here, before the greeting gate, so it fires the instant the
+  // page loads -- not after someone taps Amen. The gate's `await` genuinely
+  // pauses this function until that tap happens, so anything placed after it
+  // (as this originally was) never runs for a visitor who hasn't dismissed
+  // the gate yet, and never runs at all for an automated scanner that never
+  // taps anything.
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is optional */ });
+  }
+
   currentRoute = normalise(location.hash || '/');
 
   let gateWasShown = false;
@@ -204,9 +215,5 @@ window.addEventListener('hashchange', () => {
     dash.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
     dash.classList.add('dash-pop');
     dash.addEventListener('animationend', () => dash.classList.remove('dash-pop'), { once: true });
-  }
-
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-    navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is optional */ });
   }
 })();
