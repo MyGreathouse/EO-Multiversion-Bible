@@ -20,14 +20,14 @@
     { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
  "screenshots": [
-    { "src": "assets/screenshots/screenshot-1.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "The daily verse greeting" },
-    { "src": "assets/screenshots/screenshot-2.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Your dashboard" },
-    { "src": "assets/screenshots/screenshot-3.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Reading, justified" },
-    { "src": "assets/screenshots/screenshot-4.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Poetry keeps its structure" },
-    { "src": "assets/screenshots/screenshot-5.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "357,000+ cross-references" },
-    { "src": "assets/screenshots/screenshot-6.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Five full translations" },
-    { "src": "assets/screenshots/screenshot-7.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Full-text search" },
-    { "src": "assets/screenshots/screenshot-8.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Bookmarks, highlights, notes" }
+    { "src": "assets/screenshot-1.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "The daily verse greeting" },
+    { "src": "assets/screenshot-2.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Your dashboard" },
+    { "src": "assets/screenshot-3.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Reading, justified" },
+    { "src": "assets/screenshot-4.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Poetry keeps its structure" },
+    { "src": "assets/screenshot-5.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "357,000+ cross-references" },
+    { "src": "assets/screenshot-6.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Five full translations" },
+    { "src": "assets/screenshot-7.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Full-text search" },
+    { "src": "assets/screenshot-8.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Bookmarks, highlights, notes" }
   ],
   "shortcuts": [
     { "name": "Continue reading", "url": "#/", "description": "Pick up where you left off" },
