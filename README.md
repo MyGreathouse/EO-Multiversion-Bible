@@ -1,6 +1,6 @@
 # EO Multiversion Bible
 
-**Read. Study. Reflect.**
+**Five Translations. One Scripture Library.**
 
 A Progressive Web App for reading and personally studying Scripture. The complete
 Old and New Testaments in five translations, offline-capable, with no account
@@ -166,15 +166,20 @@ Typefaces: Literata and Archivo, SIL Open Font Licence 1.1.
 
 ## Advertising
 
-There is no advertising code in the app and no placeholder advertisements.
-Inert `.ad-slot` containers are reserved on the Home and Library screens only —
-never inside the reader. Ads must never interrupt Scripture reading. Introducing
-a provider means filling those containers and updating `legal/privacy.html`
-first.
+Advertising is built and wired, gated by a central switch. See
+`ADVERTISING-PRIVACY-SETUP.md` for the full architecture, what's configured
+where, and what still needs doing in a real Google AdSense account before it
+goes live. In short: `js/ads-config.js` has `ENABLED: false` and placeholder
+IDs, so no real ad request is ever made until that file is filled in with
+real values and switched on. Reserved slots exist on Home, Library and the
+reader footnote — never inside Scripture itself, never between verses.
 
 ## Privacy and security
 
-- No accounts, no sign-in, no analytics, no third-party requests.
+- No accounts, no sign-in, no analytics. The reading experience itself makes
+  no third-party requests; the separate, optional advertising layer is the
+  one part of the app that does, gated by consent where required — see
+  `ADVERTISING-PRIVACY-SETUP.md`.
 - Personal study data is written to `localStorage` under the `eo.bible.v1.`
   prefix and never transmitted. A memory fallback keeps the app usable where the
   browser blocks storage; Settings warns the user when that happens.
