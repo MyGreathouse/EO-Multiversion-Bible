@@ -2,6 +2,9 @@
 import * as bible from './bible-engine.js';
 import * as settings from './settings.js';
 import * as store from './storage.js';
+import * as audio from './audio.js';
+import * as consent from './consent.js';
+import { ADS_CONFIG } from './ads-config.js';
 import { el, clear, icon, toast, copyText } from './ui.js';
 
 export function render(host, params, navigate) {
@@ -69,6 +72,54 @@ export function render(host, params, navigate) {
     'BSB and WEB-BE carry poetic line breaks. ASV, Webster and YLT are always set as prose.',
     poetrySelect));
 
+  /* ---- greeting ---- */
+  host.append(sectionTitle('Greeting'));
+  const greetingSelect = el('select', {
+    'aria-label': 'Greeting',
+    onchange: (e) => settings.set('greetingMode', e.target.value),
+  });
+  for (const [v, l] of [['auto', 'Match the time of day'], ['morning', 'Always morning'],
+                         ['afternoon', 'Always afternoon'], ['evening', 'Always evening']]) {
+    greetingSelect.append(el('option', { value: v, selected: settings.get('greetingMode') === v }, l));
+  }
+  host.append(row('Daily greeting', 'How the verse of the day greets you each morning.', greetingSelect));
+
+  /* ---- read aloud ---- */
+  host.append(sectionTitle('Read aloud'));
+  if (!audio.isSupported()) {
+    host.append(el('p', { class: 'legal', style: 'padding:.5rem 0' },
+      'This browser doesn\u2019t support reading Scripture aloud.'));
+  } else {
+    const voiceSelect = el('select', { 'aria-label': 'Reading voice' },
+      el('option', { value: '', selected: !settings.get('readingVoice') }, 'Device default'));
+    const previewBtn = el('button', {
+      class: 'btn', text: 'Preview',
+      onclick: () => audio.speakSample(voiceSelect.value || null),
+    });
+    audio.getVoices().then((voices) => {
+      const groups = { female: [], male: [], other: [] };
+      for (const v of voices) groups[audio.classifyVoice(v)].push(v);
+      const label = { female: 'Female voices', male: 'Male voices', other: 'Other voices' };
+      for (const kind of ['female', 'male', 'other']) {
+        if (!groups[kind].length) continue;
+        const optgroup = el('optgroup', { label: label[kind] });
+        for (const v of groups[kind]) {
+          optgroup.append(el('option', {
+            value: v.voiceURI,
+            selected: settings.get('readingVoice') === v.voiceURI,
+          }, `${v.name}${v.lang ? ` (${v.lang})` : ''}`));
+        }
+        voiceSelect.append(optgroup);
+      }
+    });
+    voiceSelect.addEventListener('change', () => settings.set('readingVoice', voiceSelect.value || null));
+    host.append(row('Voice', 'Voices come from this device \u2014 they vary by phone and browser.',
+      el('div', { style: 'display:flex; gap:.5rem; align-items:center' }, voiceSelect, previewBtn)));
+    host.append(row('Keep reading into the next chapter',
+      'When a chapter finishes, carry straight on rather than stopping.',
+      toggle('autoContinueListening')));
+  }
+
   /* ---- offline ---- */
   host.append(sectionTitle('Offline'));
   const dlStatus = el('p', { class: 'legal', style: 'padding-top:.5rem' });
@@ -126,6 +177,28 @@ export function render(host, params, navigate) {
       },
     })));
 
+  /* ---- privacy & advertising ---- */
+  host.append(sectionTitle('Privacy & Advertising'));
+  host.append(el('p', { class: 'legal', style: 'padding-bottom:.5rem' },
+    ADS_CONFIG.ENABLED
+      ? 'This app is supported by advertising. Your bookmarks, highlights, notes and ' +
+        'reading history are never part of that \u2014 see the Privacy Policy for exactly ' +
+        'what advertising involves and what choices you have.'
+      : 'Advertising is not yet active in this build. When it is, this is where you\u2019ll ' +
+        'be able to review and change your advertising choices.'));
+  host.append(row('Advertising preferences', 'Review or change how advertising-related information may be used.',
+    el('button', {
+      class: 'btn',
+      text: 'Change privacy choices',
+      onclick: () => {
+        if (!consent.reopenChoices()) {
+          toast(ADS_CONFIG.ENABLED
+            ? 'Your browser\u2019s own cookie settings control this for now.'
+            : 'Advertising is not active in this build yet.');
+        }
+      },
+    })));
+
   /* ---- licensing ---- */
   host.append(sectionTitle('Scripture licensing'));
   const legal = el('div', { class: 'legal' });
@@ -148,6 +221,7 @@ export function render(host, params, navigate) {
     ['legal/privacy.html', 'Privacy policy'],
     ['legal/terms.html', 'Terms of use'],
     ['legal/licences.html', 'Scripture licensing'],
+    ['legal/faq.html', 'FAQ'],
   ]) {
     if (single) continue;
     docs.append(el('a', { class: 'btn', href, target: '_blank', rel: 'noopener', text: label }));

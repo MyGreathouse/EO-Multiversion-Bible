@@ -9,6 +9,7 @@
 import * as bible from './bible-engine.js';
 import * as settings from './settings.js';
 import * as study from './study.js';
+import * as plans from './plans.js';
 import * as store from './storage.js';
 import { el, clear, icon, toast, shareText, MONOGRAM } from './ui.js';
 
@@ -45,6 +46,10 @@ export const isGreetingDismissed = () => store.get('dailyVerseSeen', null) === l
 const dismissGreeting = () => store.set('dailyVerseSeen', localDateKey());
 
 function greeting() {
+  const mode = settings.get('greetingMode');
+  if (mode === 'morning') return 'Good morning';
+  if (mode === 'afternoon') return 'Good afternoon';
+  if (mode === 'evening') return 'Good evening';
   const h = new Date().getHours();
   if (h < 5) return 'Good evening';
   if (h < 12) return 'Good morning';
@@ -55,7 +60,7 @@ function greeting() {
 export async function render(host, params, navigate) {
   host.className = 'view';
   clear(host);
-  document.title = 'EO Multiversion Bible';
+  document.title = 'The EO Multiversion Bible';
 
   const tr = settings.get('translation');
 
@@ -63,7 +68,7 @@ export async function render(host, params, navigate) {
     el('div', { html: MONOGRAM(), style: 'width:4.5rem; margin:0 auto 1rem; color:var(--brand)' }),
     el('h1', { class: 'wordmark', style: 'font-size:1rem', text: 'EO Multiversion Bible' }),
     el('div', { class: 'hero__rule', 'aria-hidden': 'true' }),
-    el('p', { class: 'tagline', text: 'Read. Study. Reflect.' })
+    el('p', { class: 'tagline', text: 'Five Translations. One Scripture Library.' })
   ));
 
   host.append(await buildDashboard(tr, navigate));
@@ -173,8 +178,11 @@ async function buildDashboard(tr, navigate) {
   dashboard.append(heroCard(tr, navigate));
   dashboard.append(statGrid(navigate));
   dashboard.append(libraryCard(navigate));
+  dashboard.append(plansCard(navigate));
   dashboard.append(recentSection(navigate));
-  dashboard.append(el('div', { class: 'ad-slot', 'data-slot': 'home', 'aria-hidden': 'true' }));
+  dashboard.append(el('div', { class: 'ad-slot', 'data-slot': 'home', 'aria-hidden': 'true', hidden: true },
+    el('span', { class: 'ad-footnote__label', text: 'Advertisement' }),
+    el('div', { class: 'ad-slot__body' })));
   return dashboard;
 }
 
@@ -229,6 +237,22 @@ function libraryCard(navigate) {
     }, 'Bible Library'),
     el('p', { class: 'dash-library-sub',
               text: `All 66 books, ${bible.TRANSLATIONS.length} translations` })
+  );
+}
+
+function plansCard(navigate) {
+  const state = plans.active();
+  const label = state ? `Day ${plans.nextDay() + 1} \u00b7 ${state.plan.name}` : 'Reading Plans';
+  const sub = state
+    ? (plans.progress()?.percent ?? 0) + '% through'
+    : 'A structured way through the Gospels, the New Testament, or the whole Bible';
+  return el('div', { class: 'section', style: 'text-align:center' },
+    el('button', {
+      class: 'library-link',
+      'aria-label': 'Open Reading Plans',
+      onclick: () => navigate('#/plans'),
+    }, label),
+    el('p', { class: 'dash-library-sub', text: sub })
   );
 }
 

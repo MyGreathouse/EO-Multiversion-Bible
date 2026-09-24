@@ -187,7 +187,9 @@ function renderHome(host, navigate) {
   host.append(el('p', { class: 'eyebrow', style: 'margin:2rem 0 .5rem', text: 'Version' }));
   host.append(versionPicker());
 
-  host.append(el('div', { class: 'ad-slot', 'data-slot': 'library', 'aria-hidden': 'true' }));
+  host.append(el('div', { class: 'ad-slot', 'data-slot': 'library', 'aria-hidden': 'true', hidden: true },
+    el('span', { class: 'ad-footnote__label', text: 'Advertisement' }),
+    el('div', { class: 'ad-slot__body' })));
 }
 
 /* ---- level 2: books within a testament ------------------------------------ */

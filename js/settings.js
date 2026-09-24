@@ -12,6 +12,9 @@ const DEFAULTS = {
   verseLayout: 'separate',   // separate | flowing
   showHeadings: true,
   poetryLayout: 'lines',    // lines | prose
+  greetingMode: 'auto',     // auto | morning | afternoon | evening
+  readingVoice: null,       // a voiceURI, or null for the device default
+  autoContinueListening: false,
 };
 
 let current = { ...DEFAULTS, ...store.get('settings', {}) };

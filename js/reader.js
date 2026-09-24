@@ -5,6 +5,7 @@ import * as bible from './bible-engine.js';
 import * as settings from './settings.js';
 import * as study from './study.js';
 import * as store from './storage.js';
+import * as audio from './audio.js';
 import { el, clear, icon, toast, copyText, shareText } from './ui.js';
 import { openCompare } from './compare.js';
 import { openCrossReferences } from './cross-refs-view.js';
@@ -13,6 +14,7 @@ import { openTranslationPicker } from './version-picker.js';
 let state = null;      // { translation, bookId, chapter, focusVerse }
 let railFill = null;
 let scrollHandler = null;
+let speakingEl = null; // the verse element currently highlighted as being read
 
 export function destroy() {
   if (scrollHandler) {
@@ -23,9 +25,11 @@ export function destroy() {
   railFill?.parentElement?.remove();
   railFill = null;
   state = null;
+  audio.stop();
+  speakingEl = null;
 }
 
-export async function render(host, { translation, bookId, chapter, verse }, navigate) {
+export async function render(host, { translation, bookId, chapter, verse, autoListen }, navigate) {
   const keepCompare = state ? state.compareMode : false;
   destroy();
   state = { translation, bookId, chapter, focusVerse: verse || null, navigate,
@@ -74,7 +78,7 @@ export async function render(host, { translation, bookId, chapter, verse }, navi
 
   clear(inner);
   inner.append(chapterPlate(data, translation));
-  inner.append(readerTools(navigate));
+  inner.append(readerTools(data, navigate, autoListen));
   inner.append(scriptureBody(data));
   inner.append(footnoteAdSlot());
   inner.append(chapterNav(navigate));
@@ -233,6 +237,13 @@ function cancelHold() {
 }
 
 function attachPressAndHold(body) {
+  // The gesture is invisible, so say it exists once -- then never again.
+  // Staggered after the swipe hint so the two never overlap on a first visit.
+  if (!store.get('holdHintSeen', false)) {
+    store.set('holdHintSeen', true);
+    setTimeout(() => toast('Press and hold any verse to bookmark, highlight or add a note'), 3600);
+  }
+
   body.addEventListener('pointerdown', (e) => {
     if (e.button != null && e.button !== 0) return;
     const t = e.target.closest('.v');
@@ -281,7 +292,21 @@ function attachPressAndHold(body) {
 }
 
 /* ---- reader tools -------------------------------------------------------- */
-function readerTools(navigate) {
+function highlightSpeaking(verseNum) {
+  clearSpeakingHighlight();
+  const target = document.querySelector(`.scripture [data-verse="${verseNum}"]`);
+  if (target) {
+    target.classList.add('v--speaking');
+    speakingEl = target;
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+}
+function clearSpeakingHighlight() {
+  speakingEl?.classList.remove('v--speaking');
+  speakingEl = null;
+}
+
+function readerTools(data, navigate, autoListen) {
   const bar = el('div', { class: 'tools' });
 
   const compareBtn = el('button', {
@@ -294,6 +319,50 @@ function readerTools(navigate) {
     },
   }, el('span', { html: icon('compare'), style: 'display:contents' }),
      el('span', { text: 'Compare' }));
+
+  let listenState = 'idle'; // idle | speaking | paused
+  const listenIcon = el('span', { html: icon('speaker'), style: 'display:contents' });
+  const listenLabel = el('span', { text: 'Listen' });
+  const paintListen = () => {
+    listenBtn.setAttribute('aria-pressed', String(listenState !== 'idle'));
+    listenIcon.innerHTML = icon(listenState === 'speaking' ? 'pause' : listenState === 'paused' ? 'play' : 'speaker');
+    listenLabel.textContent = listenState === 'speaking' ? 'Pause' : listenState === 'paused' ? 'Resume' : 'Listen';
+  };
+  const startListening = () => {
+    if (!audio.isSupported()) return;
+    const entries = data.verses.map((text, i) => ({ verse: i + 1, text })).filter((e) => e.text);
+    if (!entries.length) { toast('Nothing to read in this chapter'); return; }
+    listenState = 'speaking';
+    paintListen();
+    audio.speak(entries, {
+      voiceURI: settings.get('readingVoice'),
+      onVerseStart: (entry) => highlightSpeaking(entry.verse),
+      onEnd: () => {
+        const next = settings.get('autoContinueListening') ? bible.step(state.bookId, state.chapter, 1) : null;
+        listenState = 'idle';
+        paintListen();
+        clearSpeakingHighlight();
+        if (next) navigate(`#/read/${state.translation}/${next.bookId}/${next.chapter}?listen=1`);
+      },
+    });
+  };
+  const listenBtn = el('button', {
+    class: 'tool', 'aria-pressed': 'false',
+    onclick: () => {
+      if (!audio.isSupported()) { toast('This browser can\u2019t read aloud'); return; }
+      if (listenState === 'idle') {
+        startListening();
+      } else if (listenState === 'speaking') {
+        audio.pause();
+        listenState = 'paused';
+        paintListen();
+      } else {
+        audio.resume();
+        listenState = 'speaking';
+        paintListen();
+      }
+    },
+  }, listenIcon, listenLabel);
 
   const current = bible.getTranslation(state.translation);
   const switcher = el('button', {
@@ -314,7 +383,8 @@ function readerTools(navigate) {
   const hint = el('p', { class: 'tools__hint', hidden: !state.compareMode,
                          text: 'Compare is on — tap any verse.' });
 
-  bar.append(switcher, compareBtn);
+  bar.append(switcher, compareBtn, listenBtn);
+  if (autoListen) startListening();
   return el('div', {}, bar, hint);
 }
 

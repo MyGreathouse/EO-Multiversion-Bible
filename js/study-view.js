@@ -2,6 +2,7 @@
 import * as bible from './bible-engine.js';
 import * as settings from './settings.js';
 import * as study from './study.js';
+import * as audio from './audio.js';
 import { el, clear, icon, toast } from './ui.js';
 
 const TABS = [
@@ -17,6 +18,7 @@ export function render(host, params, navigate) {
   document.title = 'Study · EO Multiversion Bible';
 
   let tab = TABS.some(([id]) => id === params.tab) ? params.tab : 'bookmarks';
+  let listenState = 'idle'; // idle | speaking | paused
 
   host.append(el('p', { class: 'eyebrow', text: 'Personal study' }));
   host.append(el('h1', {
@@ -34,18 +36,65 @@ export function render(host, params, navigate) {
       text: `${label}${counts[id] ? ` ${counts[id]}` : ''}`,
       'aria-pressed': String(tab === id),
       onclick: () => {
+        stopListening();
         tab = id;
         paint();
         try { history.replaceState(null, '', `#/study?tab=${id}`); } catch { /* sandboxed */ }
       },
     }));
   }
-  host.append(seg, list);
+  host.append(seg);
+
+  const listenIcon = el('span', { html: icon('speaker'), style: 'display:contents' });
+  const listenLabel = el('span', { text: 'Listen to these' });
+  const paintListen = () => {
+    listenBtn.setAttribute('aria-pressed', String(listenState !== 'idle'));
+    listenIcon.innerHTML = icon(listenState === 'speaking' ? 'pause' : listenState === 'paused' ? 'play' : 'speaker');
+    listenLabel.textContent = listenState === 'speaking' ? 'Pause' : listenState === 'paused' ? 'Resume'
+      : 'Listen to these';
+  };
+  function stopListening() {
+    audio.stop();
+    listenState = 'idle';
+    paintListen();
+    const active = list.querySelector('.row--speaking');
+    active?.classList.remove('row--speaking');
+  }
+  const listenBtn = el('button', {
+    class: 'tool', style: 'margin: var(--sp-3) 0', 'aria-pressed': 'false',
+    onclick: async () => {
+      if (!audio.isSupported()) { toast('This browser can\u2019t read aloud'); return; }
+      if (listenState === 'speaking') { audio.pause(); listenState = 'paused'; paintListen(); return; }
+      if (listenState === 'paused') { audio.resume(); listenState = 'speaking'; paintListen(); return; }
+
+      const entries = study.collect(tab);
+      if (!entries.length) return;
+      const withText = await Promise.all(entries.map(async (entry) => {
+        const tr = entry.translation && bible.isTranslation(entry.translation)
+          ? entry.translation : settings.get('translation');
+        const text = await bible.getVerse(tr, entry.bookId, entry.chapter, entry.verse).catch(() => null);
+        return { verse: entry.key, text };
+      }));
+      listenState = 'speaking';
+      paintListen();
+      audio.speak(withText, {
+        voiceURI: settings.get('readingVoice'),
+        onVerseStart: (entry) => {
+          list.querySelector('.row--speaking')?.classList.remove('row--speaking');
+          const row = list.querySelector(`[data-key="${entry.verse}"]`);
+          if (row) { row.classList.add('row--speaking'); row.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+        },
+        onEnd: () => stopListening(),
+      });
+    },
+  }, listenIcon, listenLabel);
+  host.append(listenBtn, list);
 
   function paint() {
     for (const b of seg.children) b.setAttribute('aria-pressed', String(b.dataset.tab === tab));
     clear(list);
     const entries = study.collect(tab);
+    listenBtn.hidden = !entries.length;
 
     if (!entries.length) {
       list.append(el('div', { class: 'empty' },
@@ -100,10 +149,11 @@ function row(entry, tab, navigate, repaint) {
     }));
   }
 
-  return el('div', { class: 'row', style: 'align-items:flex-start' },
+  return el('div', { class: 'row', style: 'align-items:flex-start', dataset: { key: entry.key } },
     el('button', {
       class: 'row__label', style: 'text-align:left; padding:0',
       onclick: () => navigate(`#/read/${tr}/${bookId}/${chapter}?v=${verse}`),
+
     }, body),
     el('button', {
       class: 'icon-btn', html: icon('trash'),

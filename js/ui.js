@@ -52,6 +52,9 @@ const paths = {
   trash: 'M4 6h16 M9 6V3.5h6V6 M6.5 6l.9 14h9.2l.9-14',
   download: 'M12 3v12 M7.5 10.5 12 15l4.5-4.5 M4 20h16',
   sun: 'M12 6.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z M12 1v2.5 M12 20.5V23 M4.2 4.2l1.8 1.8 M18 18l1.8 1.8 M1 12h2.5 M20.5 12H23 M4.2 19.8 6 18 M18 6l1.8-1.8',
+  speaker: 'M3 9v6h4l5 5V4L7 9z M14.5 9.5l2.5 2.5-2.5 2.5 M18 7l3 5-3 5',
+  play: 'M7 4l12 8-12 8z',
+  pause: 'M8 4v16 M16 4v16',
 };
 
 export function icon(name, extra = '') {

@@ -2,6 +2,8 @@
 import * as bible from './bible-engine.js';
 import * as settings from './settings.js';
 import * as study from './study.js';
+import * as audio from './audio.js';
+import * as ads from './ads.js';
 import { el, clear, icon, toast } from './ui.js';
 
 import * as home from './home.js';
@@ -9,6 +11,7 @@ import * as library from './library.js';
 import * as reader from './reader.js';
 import * as search from './search.js';
 import * as studyView from './study-view.js';
+import * as plansView from './plans-view.js';
 import * as settingsView from './settings-view.js';
 
 const outlet = document.getElementById('outlet');
@@ -57,6 +60,7 @@ async function route() {
   const { segments, params } = parse();
   const view = segments[0] || 'home';
   reader.destroy();
+  audio.stop();
   clear(outlet);
 
   try {
@@ -83,6 +87,7 @@ async function route() {
         if (translation !== settings.get('translation')) settings.set('translation', translation);
         await reader.render(outlet, {
           translation, bookId: b.id, chapter: ch, verse: params.v ? parseInt(params.v, 10) : null,
+          autoListen: params.listen === '1',
         }, navigate);
         break;
       }
@@ -96,6 +101,12 @@ async function route() {
         titleNode.textContent = 'Study';
         setNav('#/study');
         studyView.render(outlet, params, navigate);
+        break;
+      }
+      case 'plans': {
+        titleNode.textContent = 'Reading Plans';
+        setNav('#/study');
+        plansView.render(outlet, params, navigate);
         break;
       }
       case 'settings': {
@@ -120,6 +131,7 @@ async function route() {
         el('button', { class: 'btn', text: 'Go to the Bible', onclick: () => navigate('#/library') }))));
   }
   updateTranslationButton();
+  ads.fillSlots(outlet);
 }
 
 function setNav(target) {
@@ -197,6 +209,7 @@ window.addEventListener('hashchange', () => {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is optional */ });
   }
+  ads.init();
 
   currentRoute = normalise(location.hash || '/');
 
