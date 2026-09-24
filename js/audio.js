@@ -67,7 +67,7 @@ export const isPaused = () => isSupported() && window.speechSynthesis.paused;
  * playback can be paused and resumed cleanly and the entry currently being
  * read can be highlighted via onVerseStart.
  */
-export function speak(entries, { voiceURI, rate = 1, onVerseStart, onEnd } = {}) {
+export function speak(entries, { voiceURI, rate = 0.85, onVerseStart, onEnd } = {}) {
   stop();
   if (!isSupported() || !entries || !entries.length) { onEnd?.(); return; }
 
@@ -114,5 +114,6 @@ export function speakSample(voiceURI, text = 'The Lord is my shepherd; I shall n
   const voice = voiceURI ? voices.find((v) => v.voiceURI === voiceURI) : null;
   const utter = new SpeechSynthesisUtterance(text);
   if (voice) utter.voice = voice;
+  utter.rate = 0.85;
   window.speechSynthesis.speak(utter);
 }
