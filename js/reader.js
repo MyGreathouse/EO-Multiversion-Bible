@@ -77,9 +77,10 @@ export async function render(host, { translation, bookId, chapter, verse, autoLi
   document.title = `${data.bookName} ${chapter} · EO Multiversion Bible`;
 
   clear(inner);
+  const listenBridge = { onJump: null };
   inner.append(chapterPlate(data, translation));
-  inner.append(readerTools(data, navigate, autoListen));
-  inner.append(scriptureBody(data));
+  inner.append(readerTools(data, navigate, autoListen, listenBridge));
+  inner.append(scriptureBody(data, listenBridge));
   inner.append(footnoteAdSlot());
   inner.append(chapterNav(navigate));
 
@@ -114,7 +115,7 @@ function chapterPlate(data, translationId) {
 }
 
 /* ---- scripture ----------------------------------------------------------- */
-function scriptureBody(data) {
+function scriptureBody(data, listenBridge) {
   const body = el('article', { class: 'scripture', lang: 'en' });
   const showHeadings = settings.get('showHeadings');
   const flowing = settings.get('verseLayout') === 'flowing';
@@ -205,7 +206,7 @@ function scriptureBody(data) {
   });
   flush();
 
-  attachPressAndHold(body);
+  attachPressAndHold(body, listenBridge);
   body.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       const t = e.target.closest('.v');
@@ -236,7 +237,7 @@ function cancelHold() {
   holdOrigin = null;
 }
 
-function attachPressAndHold(body) {
+function attachPressAndHold(body, listenBridge) {
   // The gesture is invisible, so say it exists once -- then never again.
   // Staggered after the swipe hint so the two never overlap on a first visit.
   if (!store.get('holdHintSeen', false)) {
@@ -276,6 +277,7 @@ function attachPressAndHold(body) {
     const v = e.target.closest('.v');
     if (!v || !t) return;
     if (state && state.compareMode) { openCompare(state.bookId, state.chapter, +v.dataset.verse); return; }
+    if (listenBridge?.onJump?.(+v.dataset.verse)) return; // playback is active -- the tap jumped to this verse instead
     // Teach the gesture rather than leaving a tap feeling broken.
     tapsWithoutHold += 1;
     if (tapsWithoutHold <= 3) toast('Hold a verse to bookmark, highlight or note it');
@@ -306,7 +308,7 @@ function clearSpeakingHighlight() {
   speakingEl = null;
 }
 
-function readerTools(data, navigate, autoListen) {
+function readerTools(data, navigate, autoListen, listenBridge) {
   const bar = el('div', { class: 'tools' });
 
   const compareBtn = el('button', {
@@ -347,6 +349,19 @@ function readerTools(data, navigate, autoListen) {
       },
     });
   };
+  if (listenBridge) {
+    listenBridge.onJump = (verseNum) => {
+      const jumped = audio.jumpToVerse(verseNum);
+      if (jumped) {
+        // A jump always results in active speech, even if playback was
+        // paused when the tap landed -- that matches what tapping a verse
+        // while listening actually implies: play this, now.
+        listenState = 'speaking';
+        paintListen();
+      }
+      return jumped;
+    };
+  }
   const listenBtn = el('button', {
     class: 'tool', 'aria-pressed': 'false',
     onclick: () => {

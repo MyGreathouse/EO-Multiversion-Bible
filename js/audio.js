@@ -86,9 +86,35 @@ let queue = [];
 let queueIndex = 0;
 let cancelled = true;
 let callbacks = null;
+let activeVoice = null;
+let activeRate = 0.85;
+// Bumped on every jump/stop/fresh speak() so a callback from an utterance
+// that's being cancelled -- browsers are inconsistent about whether that
+// still fires onend, onerror, both, or neither -- can never act on stale
+// state and corrupt the queue position.
+let generation = 0;
 
 export const isSpeaking = () => isSupported() && (window.speechSynthesis.speaking || window.speechSynthesis.pending);
 export const isPaused = () => isSupported() && window.speechSynthesis.paused;
+
+/** True while a chapter is actively queued, whether speaking or paused --
+ * this is what a "tap a verse to jump" control should check before acting. */
+export const isActive = () => !cancelled && queue.length > 0;
+
+function speakNext() {
+  if (cancelled) return;
+  if (queueIndex >= queue.length) { callbacks?.onEnd?.(); return; }
+  const entry = queue[queueIndex];
+  if (!entry.text) { queueIndex += 1; speakNext(); return; }
+  const myGen = generation;
+  const utter = new SpeechSynthesisUtterance(entry.text);
+  if (activeVoice) { try { utter.voice = activeVoice; } catch { /* stale or invalid voice object -- fall back to the device default rather than break playback */ } }
+  utter.rate = activeRate;
+  utter.onstart = () => { if (myGen === generation && !cancelled) callbacks?.onVerseStart?.(entry); };
+  utter.onend = () => { if (myGen === generation && !cancelled) { queueIndex += 1; speakNext(); } };
+  utter.onerror = () => { if (myGen === generation && !cancelled) { queueIndex += 1; speakNext(); } };
+  window.speechSynthesis.speak(utter);
+}
 
 /**
  * Reads a list of { verse, text } entries aloud, one utterance per entry, so
@@ -103,22 +129,28 @@ export function speak(entries, { voiceURI, rate = 0.85, onVerseStart, onEnd } = 
   queue = entries;
   queueIndex = 0;
   callbacks = { onVerseStart, onEnd };
-  const voice = voiceURI ? voices.find((v) => v.voiceURI === voiceURI) : null;
-
-  const speakNext = () => {
-    if (cancelled) return;
-    if (queueIndex >= queue.length) { callbacks?.onEnd?.(); return; }
-    const entry = queue[queueIndex];
-    if (!entry.text) { queueIndex += 1; speakNext(); return; }
-    const utter = new SpeechSynthesisUtterance(entry.text);
-    if (voice) { try { utter.voice = voice; } catch { /* stale or invalid voice object -- fall back to the device default rather than break playback */ } }
-    utter.rate = rate;
-    utter.onstart = () => { if (!cancelled) callbacks?.onVerseStart?.(entry); };
-    utter.onend = () => { if (!cancelled) { queueIndex += 1; speakNext(); } };
-    utter.onerror = () => { if (!cancelled) { queueIndex += 1; speakNext(); } };
-    window.speechSynthesis.speak(utter);
-  };
+  activeVoice = voiceURI ? voices.find((v) => v.voiceURI === voiceURI) : null;
+  activeRate = rate;
   speakNext();
+}
+
+/**
+ * Jumps to a specific verse within the chapter currently playing (or
+ * paused) and continues forward from there -- for "tap a verse while
+ * listening to skip to it" rather than waiting for the whole queue to play
+ * through in order. Returns false, doing nothing, if nothing is active or
+ * the verse isn't part of the current queue (e.g. a different chapter).
+ */
+export function jumpToVerse(verseNumber) {
+  if (!isActive()) return false;
+  const idx = queue.findIndex((e) => e.verse === verseNumber);
+  if (idx < 0) return false;
+  generation += 1; // invalidate whatever utterance is currently in flight
+  if (isSupported()) window.speechSynthesis.cancel();
+  cancelled = false;
+  queueIndex = idx;
+  speakNext();
+  return true;
 }
 
 export function pause() {
@@ -128,6 +160,7 @@ export function resume() {
   if (isSupported() && window.speechSynthesis.paused) window.speechSynthesis.resume();
 }
 export function stop() {
+  generation += 1;
   cancelled = true;
   queue = [];
   queueIndex = 0;
