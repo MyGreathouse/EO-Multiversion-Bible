@@ -331,11 +331,12 @@ function readerTools(data, navigate, autoListen) {
   const startListening = () => {
     if (!audio.isSupported()) return;
     const entries = data.verses.map((text, i) => ({ verse: i + 1, text })).filter((e) => e.text);
-    if (!entries.length) { toast('Nothing to read in this chapter'); return; }
+        if (!entries.length) { toast('Nothing to read in this chapter'); return; }
     listenState = 'speaking';
     paintListen();
     audio.speak(entries, {
       voiceURI: settings.get('readingVoice'),
+      rate: settings.get('readingRate'),
       onVerseStart: (entry) => highlightSpeaking(entry.verse),
       onEnd: () => {
         const next = settings.get('autoContinueListening') ? bible.step(state.bookId, state.chapter, 1) : null;

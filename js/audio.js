@@ -54,6 +54,34 @@ export function classifyVoice(voice) {
   return 'other';
 }
 
+/* Groups a voice by language/accent using its actual BCP-47 locale (e.g.
+ * "en-GB", "ja-JP") -- the one piece of real, structured information every
+ * voice reliably carries. This can only group what a device actually has;
+ * it never invents a voice that isn't there. English variants are split by
+ * region since that's what "British" vs "American" vs "Nigerian" means in
+ * practice; other languages are grouped by language alone. Nothing here
+ * guarantees a given accent exists on any particular device -- Nigerian
+ * English in particular has no standard system voice on current phones or
+ * browsers as far as this was checked, so that group will often be empty. */
+const ACCENT_GROUPS = [
+  { id: 'en-GB', label: 'British English', test: (l) => /^en-GB/i.test(l) },
+  { id: 'en-US', label: 'American English', test: (l) => /^en-US/i.test(l) },
+  { id: 'en-NG', label: 'Nigerian English', test: (l) => /^en-NG/i.test(l) },
+  { id: 'ja', label: 'Japanese', test: (l) => /^ja/i.test(l) },
+  { id: 'fr', label: 'French', test: (l) => /^fr/i.test(l) },
+  { id: 'zh', label: 'Chinese', test: (l) => /^zh/i.test(l) },
+  { id: 'es', label: 'Spanish', test: (l) => /^es/i.test(l) },
+  { id: 'ru', label: 'Russian', test: (l) => /^ru/i.test(l) },
+];
+
+export function classifyAccent(voice) {
+  const lang = voice?.lang || '';
+  const match = ACCENT_GROUPS.find((g) => g.test(lang));
+  return match ? match.label : (lang.split('-')[0].toUpperCase() || 'Other') + ' / other';
+}
+
+export const ACCENT_ORDER = [...ACCENT_GROUPS.map((g) => g.label), null]; // null = catch-all "Other"
+
 let queue = [];
 let queueIndex = 0;
 let cancelled = true;
@@ -83,7 +111,7 @@ export function speak(entries, { voiceURI, rate = 0.85, onVerseStart, onEnd } = 
     const entry = queue[queueIndex];
     if (!entry.text) { queueIndex += 1; speakNext(); return; }
     const utter = new SpeechSynthesisUtterance(entry.text);
-    if (voice) utter.voice = voice;
+    if (voice) { try { utter.voice = voice; } catch { /* stale or invalid voice object -- fall back to the device default rather than break playback */ } }
     utter.rate = rate;
     utter.onstart = () => { if (!cancelled) callbacks?.onVerseStart?.(entry); };
     utter.onend = () => { if (!cancelled) { queueIndex += 1; speakNext(); } };
@@ -108,12 +136,12 @@ export function stop() {
 }
 
 /** A short sample used when previewing a voice in Settings. */
-export function speakSample(voiceURI, text = 'The Lord is my shepherd; I shall not want.') {
+export function speakSample(voiceURI, rate = 0.85, text = 'The Lord is my shepherd; I shall not want.') {
   if (!isSupported()) return;
   window.speechSynthesis.cancel();
   const voice = voiceURI ? voices.find((v) => v.voiceURI === voiceURI) : null;
   const utter = new SpeechSynthesisUtterance(text);
-  if (voice) utter.voice = voice;
-  utter.rate = 0.85;
+  if (voice) { try { utter.voice = voice; } catch { /* stale or invalid voice object -- fall back to the device default rather than break playback */ } }
+  utter.rate = rate;
   window.speechSynthesis.speak(utter);
 }

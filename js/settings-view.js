@@ -94,27 +94,41 @@ export function render(host, params, navigate) {
       el('option', { value: '', selected: !settings.get('readingVoice') }, 'Device default'));
     const previewBtn = el('button', {
       class: 'btn', text: 'Preview',
-      onclick: () => audio.speakSample(voiceSelect.value || null),
+      onclick: () => audio.speakSample(voiceSelect.value || null, settings.get('readingRate')),
     });
     audio.getVoices().then((voices) => {
-      const groups = { female: [], male: [], other: [] };
-      for (const v of voices) groups[audio.classifyVoice(v)].push(v);
-      const label = { female: 'Female voices', male: 'Male voices', other: 'Other voices' };
-      for (const kind of ['female', 'male', 'other']) {
-        if (!groups[kind].length) continue;
-        const optgroup = el('optgroup', { label: label[kind] });
-        for (const v of groups[kind]) {
+      // Grouped by language/accent first (British, American, Japanese, and
+      // so on, from the voice's own locale), then by gender within each
+      // group. This only reflects what the device actually has -- an
+      // accent with no installed voice simply doesn't appear here, rather
+      // than being offered and silently failing.
+      const byAccent = new Map();
+      for (const v of voices) {
+        const accent = audio.classifyAccent(v);
+        if (!byAccent.has(accent)) byAccent.set(accent, []);
+        byAccent.get(accent).push(v);
+      }
+      const genderLabel = { female: 'Female', male: 'Male', other: '' };
+      const orderedAccents = [...audio.ACCENT_ORDER.filter((a) => a && byAccent.has(a)),
+        ...[...byAccent.keys()].filter((a) => !audio.ACCENT_ORDER.includes(a))];
+      for (const accent of orderedAccents) {
+        const list = byAccent.get(accent);
+        if (!list?.length) continue;
+        const optgroup = el('optgroup', { label: accent });
+        for (const v of list) {
+          const gender = genderLabel[audio.classifyVoice(v)];
           optgroup.append(el('option', {
             value: v.voiceURI,
             selected: settings.get('readingVoice') === v.voiceURI,
-          }, `${v.name}${v.lang ? ` (${v.lang})` : ''}`));
+          }, `${v.name}${gender ? ` (${gender})` : ''}`));
         }
         voiceSelect.append(optgroup);
       }
     });
     voiceSelect.addEventListener('change', () => settings.set('readingVoice', voiceSelect.value || null));
-    host.append(row('Voice', 'Voices come from this device \u2014 they vary by phone and browser.',
+    host.append(row('Voice', 'Grouped by language and accent, using whatever this device actually offers \u2014 coverage varies by phone and browser.',
       el('div', { style: 'display:flex; gap:.5rem; align-items:center' }, voiceSelect, previewBtn)));
+    host.append(rangeRow('Reading speed', 'readingRate', 0.5, 1, 0.05, (v) => `${(+v).toFixed(2)}\u00d7`));
     host.append(row('Keep reading into the next chapter',
       'When a chapter finishes, carry straight on rather than stopping.',
       toggle('autoContinueListening')));
@@ -263,7 +277,7 @@ function rangeRow(label, key, min, max, step, format) {
     type: 'range', min, max, step, value: settings.get(key),
     'aria-label': label,
     oninput: (e) => {
-      const v = key === 'leading' ? parseFloat(e.target.value) : parseInt(e.target.value, 10);
+      const v = (key === 'leading' || key === 'readingRate') ? parseFloat(e.target.value) : parseInt(e.target.value, 10);
       settings.set(key, v);
       value.textContent = format(v);
     },

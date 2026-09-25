@@ -14,6 +14,7 @@ const DEFAULTS = {
   poetryLayout: 'lines',    // lines | prose
   greetingMode: 'auto',     // auto | morning | afternoon | evening
   readingVoice: null,       // a voiceURI, or null for the device default
+  readingRate: 0.85,        // 0.5-1.0, how fast the Listen feature reads
   autoContinueListening: false,
 };
 
