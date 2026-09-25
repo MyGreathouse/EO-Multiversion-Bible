@@ -251,6 +251,10 @@ export function render(host, params, navigate) {
   host.append(el('p', { class: 'legal' },
     'EO Multiversion Bible — Scripture. Study. Reflection. Created under the EO personal brand ' +
     'by Elias Okafor. Ideas. Purpose. Impact.'));
+  host.append(el('p', { class: 'legal', style: 'margin-top:.75rem' },
+    '\u00a9 2026 Risten Global Ltd. All rights reserved. This applies to the application \u2014 ' +
+    'its design, code and compilation \u2014 not to the Scripture text itself, which is public ' +
+    'domain. See Scripture licensing above for the translations\u2019 own status.'));
   host.append(el('p', { class: 'legal', style: 'margin-top:.5rem' },
     el('button', { class: 'btn btn--ghost', style: 'padding-left:0', text: 'Reset all settings', onclick: () => { settings.reset(); toast('Settings reset'); render(host, params, navigate); } })));
 }
