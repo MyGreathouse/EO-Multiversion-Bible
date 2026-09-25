@@ -55,6 +55,8 @@ const paths = {
   speaker: 'M3 9v6h4l5 5V4L7 9z M14.5 9.5l2.5 2.5-2.5 2.5 M18 7l3 5-3 5',
   play: 'M7 4l12 8-12 8z',
   pause: 'M8 4v16 M16 4v16',
+  pin: 'M12 19V9 M6 13l6-6 6 6 M5 5h14',
+  grip: 'M8 6h.01 M8 12h.01 M8 18h.01 M16 6h.01 M16 12h.01 M16 18h.01',
 };
 
 export function icon(name, extra = '') {

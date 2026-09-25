@@ -12,6 +12,84 @@ const TABS = [
   ['favourites', 'Favourites'],
 ];
 
+const REORDERABLE = new Set(['bookmarks', 'highlights', 'favourites']);
+
+/**
+ * Lets a row be dragged by its handle to a new position in the list. The
+ * dragged row floats and follows the pointer; other rows are never moved
+ * mid-drag, only highlighted to show where it would land -- simpler and
+ * more reliable on touch than live-reordering the DOM during the drag.
+ * The actual new order is only written on release.
+ */
+function attachDragReorder(list, getTab, repaint) {
+  let dragEl = null;
+  let rows = [];
+
+  const rowAtPoint = (clientY) => {
+    let best = null;
+    let bestDist = Infinity;
+    for (const r of rows) {
+      if (r === dragEl) continue;
+      const rect = r.getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      const dist = Math.abs(mid - clientY);
+      if (dist < bestDist) { bestDist = dist; best = r; }
+    }
+    return best;
+  };
+
+  const cleanup = () => {
+    for (const r of rows) {
+      r.classList.remove('row--drop-target');
+      r.style.transform = '';
+      r.style.position = '';
+      r.style.zIndex = '';
+    }
+    dragEl?.classList.remove('row--dragging');
+    dragEl = null;
+    rows = [];
+  };
+
+  list.addEventListener('pointerdown', (e) => {
+    if (!REORDERABLE.has(getTab())) return;
+    const handle = e.target.closest('.row__handle');
+    if (!handle) return;
+    const rowEl = handle.closest('.row');
+    if (!rowEl) return;
+    e.preventDefault();
+    dragEl = rowEl;
+    rows = [...list.querySelectorAll('.row')];
+    dragEl.style.position = 'relative';
+    dragEl.style.zIndex = '5';
+    dragEl.classList.add('row--dragging');
+    dragEl.dataset.startY = String(e.clientY);
+    try { dragEl.setPointerCapture(e.pointerId); } catch { /* not essential */ }
+  });
+
+  list.addEventListener('pointermove', (e) => {
+    if (!dragEl) return;
+    const startY = Number(dragEl.dataset.startY);
+    dragEl.style.transform = `translateY(${e.clientY - startY}px)`;
+    for (const r of rows) r.classList.remove('row--drop-target');
+    rowAtPoint(e.clientY)?.classList.add('row--drop-target');
+  });
+
+  const onRelease = (e) => {
+    if (!dragEl) return;
+    const target = rowAtPoint(e.clientY);
+    const key = dragEl.dataset.key;
+    const tab = getTab();
+    const toIndex = target ? rows.indexOf(target) : rows.indexOf(dragEl);
+    cleanup();
+    if (key && target) {
+      study.reorder(tab, key, toIndex);
+      repaint();
+    }
+  };
+  list.addEventListener('pointerup', onRelease);
+  list.addEventListener('pointercancel', cleanup);
+}
+
 export function render(host, params, navigate) {
   host.className = 'view';
   clear(host);
@@ -28,6 +106,7 @@ export function render(host, params, navigate) {
 
   const seg = el('div', { class: 'seg', role: 'group', 'aria-label': 'Saved items' });
   const list = el('div');
+  attachDragReorder(list, () => tab, () => paint());
   const counts = study.counts();
 
   for (const [id, label] of TABS) {
@@ -79,6 +158,7 @@ export function render(host, params, navigate) {
       paintListen();
       audio.speak(withText, {
         voiceURI: settings.get('readingVoice'),
+        rate: settings.get('readingRate'),
         onVerseStart: (entry) => {
           list.querySelector('.row--speaking')?.classList.remove('row--speaking');
           const row = list.querySelector(`[data-key="${entry.verse}"]`);
@@ -149,12 +229,26 @@ function row(entry, tab, navigate, repaint) {
     }));
   }
 
+  const reorderable = REORDERABLE.has(tab);
+  const handle = reorderable ? el('button', {
+    class: 'icon-btn row__handle', html: icon('grip'),
+    'aria-label': `Drag to reorder ${ref}`,
+    style: 'touch-action:none; cursor:grab',
+  }) : null;
+  const pinBtn = reorderable ? el('button', {
+    class: 'icon-btn', html: icon('pin'),
+    'aria-label': `Move ${ref} to the top`,
+    onclick: () => { study.moveToTop(tab, entry.key); toast('Moved to top'); repaint(); },
+  }) : null;
+
   return el('div', { class: 'row', style: 'align-items:flex-start', dataset: { key: entry.key } },
+    handle,
     el('button', {
       class: 'row__label', style: 'text-align:left; padding:0',
       onclick: () => navigate(`#/read/${tr}/${bookId}/${chapter}?v=${verse}`),
 
     }, body),
+    pinBtn,
     el('button', {
       class: 'icon-btn', html: icon('trash'),
       'aria-label': `Remove ${ref} from ${tab}`,

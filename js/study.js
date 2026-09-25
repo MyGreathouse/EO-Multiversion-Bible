@@ -100,14 +100,49 @@ function pushHistory(translation, bookId, chapter) {
 }
 
 /* ---- summary for the Study screen ---------------------------------------- */
+// Bookmarks, highlights and favourites can be manually reordered; notes
+// stay in their existing newest-first order, out of scope for this. The
+// order is stored as a plain list of keys -- purely additive, so a list
+// nobody has ever reordered behaves exactly as it always has.
+const REORDERABLE = new Set(['bookmarks', 'highlights', 'favourites']);
+const orderKey = (kind) => `${kind}Order`;
+const getOrder = (kind) => load(orderKey(kind), []);
+const setOrder = (kind, keys) => save(orderKey(kind), keys, orderKey(kind));
+
 export function collect(kind) {
   const map = kind === 'bookmarks' ? bookmarks()
     : kind === 'highlights' ? highlights()
     : kind === 'notes' ? notes()
     : favourites();
-  return Object.entries(map)
-    .map(([key, value]) => ({ ...parseKey(key), ...value, key }))
-    .sort((a, b) => b.at - a.at);
+  const entries = Object.entries(map).map(([key, value]) => ({ ...parseKey(key), ...value, key }));
+  if (!REORDERABLE.has(kind)) return entries.sort((a, b) => b.at - a.at);
+
+  const byKey = new Map(entries.map((e) => [e.key, e]));
+  const ordered = [];
+  for (const k of getOrder(kind)) {
+    const e = byKey.get(k);
+    if (e) { ordered.push(e); byKey.delete(k); }
+  }
+  // Anything not yet manually placed -- new items, or a list that's never
+  // been reordered at all -- keeps the original newest-first behaviour.
+  const rest = [...byKey.values()].sort((a, b) => b.at - a.at);
+  return [...ordered, ...rest];
+}
+
+/** Pins one entry to the very top of its list. */
+export function moveToTop(kind, key) {
+  if (!REORDERABLE.has(kind)) return;
+  const current = collect(kind).map((e) => e.key);
+  setOrder(kind, [key, ...current.filter((k) => k !== key)]);
+}
+
+/** Moves one entry to a specific position (0-based) in its list. */
+export function reorder(kind, key, toIndex) {
+  if (!REORDERABLE.has(kind)) return;
+  const current = collect(kind).map((e) => e.key);
+  const without = current.filter((k) => k !== key);
+  without.splice(Math.max(0, Math.min(toIndex, without.length)), 0, key);
+  setOrder(kind, without);
 }
 
 export const counts = () => ({
