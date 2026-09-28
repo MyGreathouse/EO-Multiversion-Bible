@@ -423,25 +423,24 @@ button.card:active { transform: scale(.99); }
 .quick-action__label { font-size: .8125rem; font-weight: 600; }
 
 .audio-row {
-  display: flex; align-items: center; gap: var(--sp-4);
+  display: flex; align-items: center; gap: .6rem;
   background: var(--surface); border: 1px solid var(--rule); border-radius: 14px;
   padding: .85rem 1rem;
 }
-.audio-row__open {
-  display: flex; align-items: center; gap: .65rem; flex: none;
-  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-}
-.audio-row__open .quick-action__icon { width: 2.75rem; height: 2.75rem; }
-.audio-row__label { font-size: .875rem; font-weight: 600; }
-.audio-row__control {
-  display: flex; align-items: center; gap: .6rem; flex: 1; min-width: 0;
-}
 .audio-row__hint { font-size: .75rem; color: var(--text-2); flex: none; }
-.audio-row__control input[type='range'] { flex: 1; min-width: 0; }
-.audio-row__value {
-  font-variant-numeric: tabular-nums; font-size: .8125rem; color: var(--text-2);
-  flex: none; min-width: 2.6rem; text-align: right;
+.audio-row input[type='range'] { flex: 1; min-width: 0; }
+.audio-row__num-wrap { display: flex; align-items: center; gap: .3rem; flex: none; }
+.audio-row__num-wrap input[type='number'] {
+  width: 3.5rem; font-variant-numeric: tabular-nums; font-size: .8125rem;
+  text-align: right; border: 1px solid var(--rule); border-radius: 6px;
+  background: var(--bg); color: var(--text); padding: .3rem .4rem;
+  -moz-appearance: textfield;
 }
+.audio-row__num-wrap input[type='number']::-webkit-inner-spin-button,
+.audio-row__num-wrap input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
+.audio-row__suffix { font-size: .8125rem; color: var(--text-2); }
 .tile { text-align: left; padding: var(--sp-4); }
 .tile__n { font-family: var(--serif); font-size: 1.5rem; font-weight: 600; line-height: 1; }
 .tile__l { font-size: .8125rem; color: var(--text-2); margin-top: .35rem; }
