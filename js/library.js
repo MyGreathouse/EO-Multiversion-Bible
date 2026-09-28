@@ -11,7 +11,7 @@ import * as bible from './bible-engine.js';
 import * as settings from './settings.js';
 import { el, clear, icon, toast } from './ui.js';
 
-const TESTAMENTS = {
+export const TESTAMENTS = {
   OT: {
     id: 'OT',
     name: 'Old Testament',

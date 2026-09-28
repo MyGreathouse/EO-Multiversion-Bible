@@ -57,6 +57,7 @@ const paths = {
   pause: 'M8 4v16 M16 4v16',
   pin: 'M12 19V9 M6 13l6-6 6 6 M5 5h14',
   grip: 'M8 6h.01 M8 12h.01 M8 18h.01 M16 6h.01 M16 12h.01 M16 18h.01',
+  plan: 'M4 4h16v16H4z M4 9h16 M8 2v4 M16 2v4 M9 14l2 2 4-4',
 };
 
 export function icon(name, extra = '') {

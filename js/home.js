@@ -10,6 +10,7 @@ import * as bible from './bible-engine.js';
 import * as settings from './settings.js';
 import * as study from './study.js';
 import * as plans from './plans.js';
+import * as library from './library.js';
 import * as store from './storage.js';
 import { el, clear, icon, toast, shareText, MONOGRAM } from './ui.js';
 
@@ -176,10 +177,12 @@ async function buildDashboard(tr, navigate) {
   const dashboard = el('div', { id: 'dashboard' });
   dashboard.append(el('p', { class: 'dash-title', text: 'Dashboard' }));
   dashboard.append(heroCard(tr, navigate));
+  dashboard.append(testamentCards(navigate));
   dashboard.append(statGrid(navigate));
   dashboard.append(libraryCard(navigate));
   dashboard.append(plansCard(navigate));
   dashboard.append(recentSection(navigate));
+  dashboard.append(quickActions(navigate));
   dashboard.append(el('div', { class: 'ad-slot', 'data-slot': 'home', 'aria-hidden': 'true', hidden: true },
     el('span', { class: 'ad-footnote__label', text: 'Advertisement' }),
     el('div', { class: 'ad-slot__body' })));
@@ -226,6 +229,44 @@ function statGrid(navigate) {
         ))
     )
   );
+}
+
+function testamentCards(navigate) {
+  return el('div', { class: 'section' },
+    el('div', { class: 'section__head' }, el('p', { class: 'eyebrow', text: 'Start reading' })),
+    el('div', { class: 'stack' },
+      ...[library.TESTAMENTS.OT, library.TESTAMENTS.NT].map((t) => {
+        const books = bible.booksIn(t.id);
+        return el('button', {
+          class: 'card testament',
+          'aria-label': `${t.name}, ${books.length} books`,
+          onclick: () => navigate(`#/library/${t.id}`),
+        },
+          el('span', { class: 'testament__body' },
+            el('span', { class: 'testament__name', text: t.name }),
+            el('span', { class: 'testament__blurb', text: t.blurb })),
+          el('span', { class: 'testament__go', html: icon('chevronRight') }));
+      })));
+}
+
+const QUICK_ACTIONS = [
+  { icon: 'search', label: 'Search', route: '#/search' },
+  { icon: 'study', label: 'Study', route: '#/study' },
+  { icon: 'plan', label: 'Reading Plans', route: '#/plans' },
+  { icon: 'settings', label: 'Settings', route: '#/settings' },
+];
+
+function quickActions(navigate) {
+  return el('div', { class: 'section' },
+    el('div', { class: 'section__head' }, el('p', { class: 'eyebrow', text: 'Explore' })),
+    el('div', { class: 'grid-2' },
+      ...QUICK_ACTIONS.map((a) => el('button', {
+        class: 'quick-action',
+        'aria-label': a.label,
+        onclick: () => navigate(a.route),
+      },
+        el('span', { class: 'quick-action__icon', html: icon(a.icon) }),
+        el('span', { class: 'quick-action__label', text: a.label })))));
 }
 
 function libraryCard(navigate) {

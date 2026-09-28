@@ -391,6 +391,23 @@ button.card:active { transform: scale(.99); }
 .dash-library-sub { margin-top: .6rem; font-size: .8125rem; color: var(--text-2); }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+
+.quick-action {
+  display: flex; flex-direction: column; align-items: center; gap: .5rem;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 14px;
+  padding: 1.1rem .75rem; text-align: center;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: transform .12s var(--ease), border-color .15s var(--ease);
+}
+.quick-action:hover { border-color: color-mix(in srgb, var(--accent-bright) 40%, var(--rule)); }
+.quick-action:active { transform: scale(.98); }
+.quick-action__icon {
+  display: grid; place-items: center; width: 2.75rem; height: 2.75rem;
+  border-radius: 50%; background: color-mix(in srgb, var(--brand) 10%, transparent);
+  color: var(--brand);
+}
+.quick-action__icon svg { width: 1.25rem; height: 1.25rem; }
+.quick-action__label { font-size: .8125rem; font-weight: 600; }
 .tile { text-align: left; padding: var(--sp-4); }
 .tile__n { font-family: var(--serif); font-size: 1.5rem; font-weight: 600; line-height: 1; }
 .tile__l { font-size: .8125rem; color: var(--text-2); margin-top: .35rem; }
