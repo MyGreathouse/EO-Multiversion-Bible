@@ -174,7 +174,9 @@ export function showGreetingGate() {
 /* ---- the dashboard: a premium overview, revealed once the gate closes ----- */
 async function buildDashboard(tr, navigate) {
   const dashboard = el('div', { id: 'dashboard' });
-  dashboard.append(el('p', { class: 'dash-title', text: 'Dashboard' }));
+  dashboard.append(el('div', { class: 'dash-top' },
+    el('p', { class: 'dash-title', text: 'Dashboard' }),
+    themeToggle()));
   dashboard.append(heroCard(tr, navigate));
   dashboard.append(testamentCards(navigate));
   dashboard.append(statGrid(navigate));
@@ -185,6 +187,25 @@ async function buildDashboard(tr, navigate) {
     el('span', { class: 'ad-footnote__label', text: 'Advertisement' }),
     el('div', { class: 'ad-slot__body' })));
   return dashboard;
+}
+
+/** A one-tap day/night switch for the home screen, so changing the look
+ * doesn't require a trip into Settings. Always toggles between the two
+ * explicit states -- tapping from Auto or Sepia takes over with a direct
+ * choice rather than staying tied to the system or a third mode. */
+function themeToggle() {
+  const btn = el('button', { class: 'theme-toggle' });
+  const paint = () => {
+    const isNight = settings.resolvedTheme() === 'night';
+    btn.innerHTML = icon(isNight ? 'moon' : 'sun');
+    btn.setAttribute('aria-label', isNight ? 'Switch to day mode' : 'Switch to night mode');
+  };
+  btn.addEventListener('click', () => {
+    settings.set('theme', settings.resolvedTheme() === 'night' ? 'day' : 'night');
+    paint();
+  });
+  paint();
+  return btn;
 }
 
 function heroCard(tr, navigate) {
