@@ -272,14 +272,42 @@ const QUICK_ACTIONS = [
   { icon: 'search', label: 'Search', route: '#/search' },
   { icon: 'study', label: 'Study', route: '#/study' },
   { icon: 'plan', label: 'Reading Plans', route: '#/plans' },
-  { icon: 'speaker', label: 'Audio', route: '#/settings?section=audio' },
   { icon: 'settings', label: 'Settings', route: '#/settings' },
 ];
+
+/** A wider, prominent row for Audio specifically -- the read-aloud speed
+ * sits right beside the icon so it can be adjusted without leaving Home,
+ * while tapping the icon or label still opens the full audio settings. */
+function audioQuickRow(navigate) {
+  const value = el('span', { class: 'audio-row__value', text: `${(+settings.get('readingRate')).toFixed(2)}\u00d7` });
+  const slider = el('input', {
+    type: 'range', min: 0.5, max: 1, step: 0.05, value: settings.get('readingRate'),
+    'aria-label': 'Reading speed',
+    oninput: (e) => {
+      const v = parseFloat(e.target.value);
+      settings.set('readingRate', v);
+      value.textContent = `${v.toFixed(2)}\u00d7`;
+    },
+  });
+  return el('div', { class: 'audio-row' },
+    el('button', {
+      class: 'audio-row__open',
+      'aria-label': 'Open audio settings',
+      onclick: () => navigate('#/settings?section=audio'),
+    },
+      el('span', { class: 'quick-action__icon', html: icon('speaker') }),
+      el('span', { class: 'audio-row__label', text: 'Audio' })),
+    el('div', { class: 'audio-row__control' },
+      el('span', { class: 'audio-row__hint', text: 'Speed' }),
+      slider,
+      value));
+}
 
 function quickActions(navigate) {
   return el('div', { class: 'section' },
     el('div', { class: 'section__head' }, el('p', { class: 'eyebrow', text: 'Explore' })),
-    el('div', { class: 'grid-2' },
+    audioQuickRow(navigate),
+    el('div', { class: 'grid-2', style: 'margin-top:.75rem' },
       ...QUICK_ACTIONS.map((a) => el('button', {
         class: 'quick-action',
         'aria-label': a.label,
