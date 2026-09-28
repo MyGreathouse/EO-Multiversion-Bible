@@ -400,21 +400,36 @@ function readerTools(data, navigate, autoListen, listenBridge) {
                          text: 'Compare is on — tap any verse.' });
 
   const speedRow = audio.isSupported() ? (() => {
-    const value = el('span', { class: 'audio-row__value', text: `${(+settings.get('readingRate')).toFixed(2)}\u00d7` });
+    const clamp = (v) => Math.min(1, Math.max(0.5, v));
+    const applyRate = (v) => {
+      settings.set('readingRate', v);
+      audio.setRate(v); // takes effect from the next verse onward, even mid-chapter
+    };
+    const numberInput = el('input', {
+      type: 'number', min: '0.5', max: '1', step: '0.01', inputmode: 'decimal',
+      value: (+settings.get('readingRate')).toFixed(2),
+      'aria-label': 'Reading speed, type an exact value',
+      onchange: (e) => {
+        const parsed = parseFloat(e.target.value);
+        const v = clamp(Number.isNaN(parsed) ? settings.get('readingRate') : parsed);
+        numberInput.value = v.toFixed(2);
+        slider.value = String(v);
+        applyRate(v);
+      },
+    });
     const slider = el('input', {
       type: 'range', min: 0.5, max: 1, step: 0.05, value: settings.get('readingRate'),
       'aria-label': 'Reading speed',
       oninput: (e) => {
         const v = parseFloat(e.target.value);
-        settings.set('readingRate', v);
-        audio.setRate(v); // takes effect from the next verse onward, even mid-chapter
-        value.textContent = `${v.toFixed(2)}\u00d7`;
+        numberInput.value = v.toFixed(2);
+        applyRate(v);
       },
     });
     return el('div', { class: 'audio-row', style: 'margin-top:.75rem' },
       el('span', { class: 'audio-row__hint', text: 'Speed' }),
       slider,
-      value);
+      el('div', { class: 'audio-row__num-wrap' }, numberInput, el('span', { class: 'audio-row__suffix', text: '\u00d7' })));
   })() : null;
 
   bar.append(switcher, compareBtn, listenBtn);
