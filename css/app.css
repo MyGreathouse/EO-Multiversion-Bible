@@ -336,6 +336,19 @@ button.card:active { transform: scale(.99); }
   font-family: var(--serif); font-weight: 600; font-size: 1.625rem;
   letter-spacing: -.01em; margin: 2rem 0 1.25rem; color: var(--brand);
 }
+.dash-top {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.dash-top .dash-title { margin: 2rem 0 1.25rem; }
+.theme-toggle {
+  display: grid; place-items: center; width: 2.75rem; height: 2.75rem;
+  border-radius: 50%; background: var(--surface); border: 1px solid var(--rule);
+  color: var(--brand); touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: transform .12s var(--ease), border-color .15s var(--ease);
+}
+.theme-toggle:hover { border-color: color-mix(in srgb, var(--accent-bright) 40%, var(--rule)); }
+.theme-toggle:active { transform: scale(.92); }
+.theme-toggle svg { width: 1.3rem; height: 1.3rem; }
 
 .dash-hero {
   display: block; width: 100%; text-align: left; position: relative;
