@@ -9,7 +9,6 @@
 import * as bible from './bible-engine.js';
 import * as settings from './settings.js';
 import * as study from './study.js';
-import * as plans from './plans.js';
 import * as library from './library.js';
 import * as store from './storage.js';
 import { el, clear, icon, toast, shareText, MONOGRAM } from './ui.js';
@@ -180,7 +179,6 @@ async function buildDashboard(tr, navigate) {
   dashboard.append(testamentCards(navigate));
   dashboard.append(statGrid(navigate));
   dashboard.append(libraryCard(navigate));
-  dashboard.append(plansCard(navigate));
   dashboard.append(recentSection(navigate));
   dashboard.append(quickActions(navigate));
   dashboard.append(el('div', { class: 'ad-slot', 'data-slot': 'home', 'aria-hidden': 'true', hidden: true },
@@ -253,6 +251,7 @@ const QUICK_ACTIONS = [
   { icon: 'search', label: 'Search', route: '#/search' },
   { icon: 'study', label: 'Study', route: '#/study' },
   { icon: 'plan', label: 'Reading Plans', route: '#/plans' },
+  { icon: 'speaker', label: 'Audio', route: '#/settings?section=audio' },
   { icon: 'settings', label: 'Settings', route: '#/settings' },
 ];
 
@@ -278,22 +277,6 @@ function libraryCard(navigate) {
     }, 'Bible Library'),
     el('p', { class: 'dash-library-sub',
               text: `All 66 books, ${bible.TRANSLATIONS.length} translations` })
-  );
-}
-
-function plansCard(navigate) {
-  const state = plans.active();
-  const label = state ? `Day ${plans.nextDay() + 1} \u00b7 ${state.plan.name}` : 'Reading Plans';
-  const sub = state
-    ? (plans.progress()?.percent ?? 0) + '% through'
-    : 'A structured way through the Gospels, the New Testament, or the whole Bible';
-  return el('div', { class: 'section', style: 'text-align:center' },
-    el('button', {
-      class: 'library-link',
-      'aria-label': 'Open Reading Plans',
-      onclick: () => navigate('#/plans'),
-    }, label),
-    el('p', { class: 'dash-library-sub', text: sub })
   );
 }
 

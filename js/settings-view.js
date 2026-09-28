@@ -85,7 +85,9 @@ export function render(host, params, navigate) {
   host.append(row('Daily greeting', 'How the verse of the day greets you each morning.', greetingSelect));
 
   /* ---- read aloud ---- */
-  host.append(sectionTitle('Read aloud'));
+  const readAloudTitle = sectionTitle('Read aloud');
+  readAloudTitle.id = 'read-aloud';
+  host.append(readAloudTitle);
   if (!audio.isSupported()) {
     host.append(el('p', { class: 'legal', style: 'padding:.5rem 0' },
       'This browser doesn\u2019t support reading Scripture aloud.'));
@@ -257,6 +259,12 @@ export function render(host, params, navigate) {
     'domain. See Scripture licensing above for the translations\u2019 own status.'));
   host.append(el('p', { class: 'legal', style: 'margin-top:.5rem' },
     el('button', { class: 'btn btn--ghost', style: 'padding-left:0', text: 'Reset all settings', onclick: () => { settings.reset(); toast('Settings reset'); render(host, params, navigate); } })));
+
+  if (params.section === 'audio') {
+    // A short delay lets the async voice list finish populating first, so
+    // the page has settled into its real height before scrolling to it.
+    setTimeout(() => document.getElementById('read-aloud')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+  }
 }
 
 /* ---- helpers ------------------------------------------------------------- */
