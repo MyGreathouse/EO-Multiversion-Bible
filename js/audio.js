@@ -153,6 +153,14 @@ export function jumpToVerse(verseNumber) {
   return true;
 }
 
+/** Changes the speed of whatever plays next -- the verse currently mid-speech
+ * can't retroactively speed up or slow down (the Web Speech API has no way
+ * to do that), but every verse from here on will use the new rate. Safe to
+ * call whether or not anything is currently playing. */
+export function setRate(rate) {
+  activeRate = rate;
+}
+
 export function pause() {
   if (isSupported() && window.speechSynthesis.speaking) window.speechSynthesis.pause();
 }

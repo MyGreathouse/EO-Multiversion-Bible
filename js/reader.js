@@ -399,9 +399,27 @@ function readerTools(data, navigate, autoListen, listenBridge) {
   const hint = el('p', { class: 'tools__hint', hidden: !state.compareMode,
                          text: 'Compare is on — tap any verse.' });
 
+  const speedRow = audio.isSupported() ? (() => {
+    const value = el('span', { class: 'audio-row__value', text: `${(+settings.get('readingRate')).toFixed(2)}\u00d7` });
+    const slider = el('input', {
+      type: 'range', min: 0.5, max: 1, step: 0.05, value: settings.get('readingRate'),
+      'aria-label': 'Reading speed',
+      oninput: (e) => {
+        const v = parseFloat(e.target.value);
+        settings.set('readingRate', v);
+        audio.setRate(v); // takes effect from the next verse onward, even mid-chapter
+        value.textContent = `${v.toFixed(2)}\u00d7`;
+      },
+    });
+    return el('div', { class: 'audio-row', style: 'margin-top:.75rem' },
+      el('span', { class: 'audio-row__hint', text: 'Speed' }),
+      slider,
+      value);
+  })() : null;
+
   bar.append(switcher, compareBtn, listenBtn);
   if (autoListen) startListening();
-  return el('div', {}, bar, hint);
+  return el('div', {}, bar, hint, speedRow);
 }
 
 /* ---- advertising: a footnote at the very end of a chapter -----------------
