@@ -1,6 +1,7 @@
 /* plans-view.js — browse reading plans, start one, and open today's reading. */
 import * as bible from './bible-engine.js';
 import * as plans from './plans.js';
+import * as settings from './settings.js';
 import { el, clear, icon, toast } from './ui.js';
 
 export function render(host, params, navigate) {
@@ -49,7 +50,7 @@ function activeCard(state, host, navigate) {
       list.append(el('li', { style: 'padding:.3rem 0' },
         el('button', {
           class: 'row__label', style: 'text-align:left; padding:0; font-weight:600',
-          onclick: () => navigate(`#/read/bsb/${bookId}/${chapter}`),
+          onclick: () => navigate(`#/read/${settings.get('translation')}/${bookId}/${chapter}`),
         }, `${bible.bookName(bookId)} ${chapter}`)));
     }
     card.append(list, el('button', {

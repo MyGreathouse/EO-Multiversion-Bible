@@ -4,7 +4,7 @@ import { isTranslation } from './bible-engine.js';
 
 const DEFAULTS = {
   theme: 'auto',            // auto | day | sepia | night
-  translation: 'bsb',
+  translation: 'webster',
   textSize: 18,             // px, 15–30
   leading: 1.72,            // 1.4–2.2
   measure: 34,              // rem, 26–46
