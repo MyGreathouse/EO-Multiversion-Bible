@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "uk.co.risten.eobible",
+        "sha256_cert_fingerprints": ["A5:B0:99:EA:15:D2:45:F4:6E:49:44:9F:EF:79:E8:DE:1A:63:8F:5D:3B:70:20:F0:EF:7D:27:A1:14:E3:AE:6C"]
+      }
+    }]
