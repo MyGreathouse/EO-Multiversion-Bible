@@ -4,6 +4,13 @@
    Type: Literata (Scripture + display) / Archivo (interface).
    ========================================================================== */
 
+/* The hidden attribute must always win. Without this, any element whose own
+   class sets display (e.g. .tool { display: flex }) silently overrides the
+   browser's default [hidden] behaviour, since author styles beat user-agent
+   defaults regardless of source order -- this bit a real element (Study's
+   "Listen to these" button) before being caught. */
+[hidden] { display: none !important; }
+
 /* ---- fonts --------------------------------------------------------------- */
 @font-face {
   font-family: 'Literata';
