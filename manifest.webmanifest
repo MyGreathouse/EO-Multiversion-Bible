@@ -13,11 +13,20 @@
   "lang": "en-GB",
   "dir": "ltr",
   "categories": ["books", "education", "lifestyle"],
+  "prefer_related_applications": false,
   "icons": [
     { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "assets/screenshots/screenshot-1.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Home dashboard with the daily verse of the day" },
+    { "src": "assets/screenshots/screenshot-2.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Reading Scripture with the Listen and Compare tools" },
+    { "src": "assets/screenshots/screenshot-3.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Bible Library across all five translations" },
+    { "src": "assets/screenshots/screenshot-4.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Structured reading plans" },
+    { "src": "assets/screenshots/screenshot-5.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Full-text Scripture search" },
+    { "src": "assets/screenshots/screenshot-6.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Settings, including read-aloud voice and speed" }
   ],
   "shortcuts": [
     { "name": "Continue reading", "url": "#/", "description": "Pick up where you left off" },
