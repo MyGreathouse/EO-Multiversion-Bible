@@ -7,7 +7,7 @@
  *                is immutable, so once a book is saved it is simply kept.
  */
 const VERSION = 'v1';
-const SHELL = 'eo-shell-v2'; // bumped for the Go-to sheet; Scripture cache is kept
+const SHELL = 'eo-shell-v3'; // bumped: app code is now network-first; Scripture cache is kept
 const SCRIPTURE = `eo-scripture-${VERSION}`;
 const KEEP = new Set([SHELL, SCRIPTURE]);
 
@@ -117,13 +117,30 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Everything else: stale-while-revalidate.
+  // Fonts never change under the same name: cache-first.
+  if (url.pathname.includes('/assets/fonts/')) {
+    event.respondWith((async () => {
+      const cache = await caches.open(SHELL);
+      const hit = await cache.match(request);
+      if (hit) return hit;
+      const res = await fetch(request);
+      if (res.ok) cache.put(request, res.clone());
+      return res;
+    })());
+    return;
+  }
+
+  // Everything else (scripts, styles, pages, manifest, images): network-first.
+  // Online, people always get the newest code, so an upload can never leave a
+  // phone running a half-old, half-new mix. Offline, the saved copy is used.
   event.respondWith((async () => {
     const cache = await caches.open(SHELL);
-    const hit = await cache.match(request);
-    const network = fetch(request)
-      .then((res) => { if (res.ok) cache.put(request, res.clone()); return res; })
-      .catch(() => null);
-    return hit || (await network) || new Response('', { status: 504 });
+    try {
+      const res = await fetch(request, { cache: 'no-cache' });
+      if (res.ok) cache.put(request, res.clone());
+      return res;
+    } catch {
+      return (await cache.match(request)) || new Response('', { status: 504 });
+    }
   })());
 });

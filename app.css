@@ -4,6 +4,13 @@
    Type: Literata (Scripture + display) / Archivo (interface).
    ========================================================================== */
 
+/* The hidden attribute must always win. Without this, any element whose own
+   class sets display (e.g. .tool { display: flex }) silently overrides the
+   browser's default [hidden] behaviour, since author styles beat user-agent
+   defaults regardless of source order -- this bit a real element (Study's
+   "Listen to these" button) before being caught. */
+[hidden] { display: none !important; }
+
 /* ---- fonts --------------------------------------------------------------- */
 @font-face {
   font-family: 'Literata';
@@ -336,6 +343,19 @@ button.card:active { transform: scale(.99); }
   font-family: var(--serif); font-weight: 600; font-size: 1.625rem;
   letter-spacing: -.01em; margin: 2rem 0 1.25rem; color: var(--brand);
 }
+.dash-top {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.dash-top .dash-title { margin: 2rem 0 1.25rem; }
+.theme-toggle {
+  display: grid; place-items: center; width: 2.75rem; height: 2.75rem;
+  border-radius: 50%; background: var(--surface); border: 1px solid var(--rule);
+  color: var(--brand); touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: transform .12s var(--ease), border-color .15s var(--ease);
+}
+.theme-toggle:hover { border-color: color-mix(in srgb, var(--accent-bright) 40%, var(--rule)); }
+.theme-toggle:active { transform: scale(.92); }
+.theme-toggle svg { width: 1.3rem; height: 1.3rem; }
 
 .dash-hero {
   display: block; width: 100%; text-align: left; position: relative;
@@ -391,6 +411,43 @@ button.card:active { transform: scale(.99); }
 .dash-library-sub { margin-top: .6rem; font-size: .8125rem; color: var(--text-2); }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+
+.quick-action {
+  display: flex; flex-direction: column; align-items: center; gap: .5rem;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 14px;
+  padding: 1.1rem .75rem; text-align: center;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: transform .12s var(--ease), border-color .15s var(--ease);
+}
+.quick-action:hover { border-color: color-mix(in srgb, var(--accent-bright) 40%, var(--rule)); }
+.quick-action:active { transform: scale(.98); }
+.quick-action__icon {
+  display: grid; place-items: center; width: 2.75rem; height: 2.75rem;
+  border-radius: 50%; background: color-mix(in srgb, var(--brand) 10%, transparent);
+  color: var(--brand);
+}
+.quick-action__icon svg { width: 1.25rem; height: 1.25rem; }
+.quick-action__label { font-size: .8125rem; font-weight: 600; }
+
+.audio-row {
+  display: flex; align-items: center; gap: .6rem;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 14px;
+  padding: .85rem 1rem;
+}
+.audio-row__hint { font-size: .75rem; color: var(--text-2); flex: none; }
+.audio-row input[type='range'] { flex: 1; min-width: 0; }
+.audio-row__num-wrap { display: flex; align-items: center; gap: .3rem; flex: none; }
+.audio-row__num-wrap input[type='number'] {
+  width: 3.5rem; font-variant-numeric: tabular-nums; font-size: .8125rem;
+  text-align: right; border: 1px solid var(--rule); border-radius: 6px;
+  background: var(--bg); color: var(--text); padding: .3rem .4rem;
+  -moz-appearance: textfield;
+}
+.audio-row__num-wrap input[type='number']::-webkit-inner-spin-button,
+.audio-row__num-wrap input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
+.audio-row__suffix { font-size: .8125rem; color: var(--text-2); }
 .tile { text-align: left; padding: var(--sp-4); }
 .tile__n { font-family: var(--serif); font-size: 1.5rem; font-weight: 600; line-height: 1; }
 .tile__l { font-size: .8125rem; color: var(--text-2); margin-top: .35rem; }
@@ -878,6 +935,7 @@ button.card:active { transform: scale(.99); }
 .picker-row__mark svg { width: .8rem; height: .8rem; }
 .picker-row__body { min-width: 0; flex: 1; }
 .picker-row__name { font-family: var(--serif); font-size: 1rem; font-weight: 600; }
+
 .picker-row__meta { font-size: .75rem; color: var(--text-3); margin-top: .1rem; }
 
 .sheet__foot {
@@ -932,6 +990,14 @@ button.card:active { transform: scale(.99); }
   box-shadow: inset 3px 0 0 var(--brand);
   transition: background-color .25s var(--ease);
 }
+.row__handle {
+  flex: none; color: var(--text-3); touch-action: none; cursor: grab;
+}
+.row--dragging {
+  background: var(--surface); box-shadow: 0 6px 16px rgba(0,0,0,.18);
+  border-radius: 8px; opacity: .96;
+}
+.row--drop-target { box-shadow: inset 0 2px 0 var(--brand); }
 .row__label { flex: 1 1 12rem; min-width: 0; }
 .row__hint { font-size: .8125rem; color: var(--text-2); margin-top: .15rem; }
 .row select { flex: 0 1 auto; max-width: 100%; }
@@ -1045,3 +1111,51 @@ input[type='range'] {
   .topbar, .nav, .sheet, .sheet-backdrop, .rail, .chapter-nav { display: none !important; }
   body { background: #fff; color: #000; }
 }
+
+/* ---- go to book & chapter -------------------------------------------------- */
+.topbar__title[data-goto] {
+  cursor: pointer; display: inline-flex; align-items: center; gap: .35rem;
+  padding: .35rem .5rem; margin-left: -.5rem; border-radius: 9px;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.topbar__title[data-goto]::after {
+  content: ''; width: .45rem; height: .45rem; flex: none; margin-top: -.15rem;
+  border-right: 1.5px solid var(--text-3); border-bottom: 1.5px solid var(--text-3);
+  rotate: 45deg;
+}
+.topbar__title[data-goto]:hover { background: var(--surface-2); }
+.topbar__title[data-goto]:focus-visible { outline: 2px solid var(--accent-bright); outline-offset: 1px; }
+.goto-trigger { flex: 1 1 100%; width: 100%; text-align: left; }
+.sheet--goto {
+  max-width: 36rem; margin-inline: auto;
+  display: flex; flex-direction: column; height: min(82dvh, 44rem); overflow: hidden;
+}
+.sheet--goto > * { flex: none; }
+.sheet--goto .goto-books, .sheet--goto .goto-grid {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  align-content: start; padding-bottom: var(--sp-3);
+}
+.sheet--goto .book-filter { margin-bottom: var(--sp-3) !important; }
+.sheet--goto .book-row[aria-current='true'] { background: var(--surface-2); }
+.goto-back {
+  display: inline-flex; align-items: center; gap: .15rem; min-height: 2.75rem;
+  margin-left: -.5rem; padding: 0 .5rem; border-radius: 9px;
+  font-size: .8125rem; font-weight: 650; color: var(--text-2);
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.goto-back svg { width: 1rem; height: 1rem; }
+.goto-back:hover { background: var(--surface-2); color: var(--text); }
+.goto-sub { font-size: .75rem; color: var(--text-3); margin: .15rem 0 var(--sp-3); }
+.goto-grid {
+  display: grid; gap: var(--sp-2);
+  grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
+}
+.goto-ch {
+  min-height: 2.75rem; border-radius: 9px; border: 1px solid var(--rule);
+  background: var(--surface); font-family: var(--serif); font-size: 1rem; font-weight: 600;
+  color: var(--text); touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: transform .12s var(--ease), background-color .15s var(--ease);
+}
+.goto-ch:hover { border-color: var(--accent-bright); }
+.goto-ch:active { transform: scale(.94); }
+.goto-ch[aria-current='true'] { background: var(--brand); border-color: var(--brand); color: var(--bg); }
