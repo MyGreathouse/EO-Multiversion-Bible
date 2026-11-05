@@ -50,6 +50,7 @@ function versionPicker(onChange) {
   for (const g of groups) {
     const set = bible.TRANSLATIONS.filter((t) => g.ids.includes(t.id));
     if (!set.length) continue;
+    const soon = g.label === 'Classic' && bible.SHOW_UPCOMING ? bible.UPCOMING : [];
     wrap.append(el('span', { class: 'version-group', style: 'grid-column:1/-1', text: g.label }));
     for (const t of set) {
       wrap.append(el('button', {
@@ -64,6 +65,11 @@ function versionPicker(onChange) {
         el('span', { class: 'version__abbr', text: t.abbr }),
         el('span', { class: 'version__name', text: t.name })
       ));
+    }
+    for (const t of soon) {
+      wrap.append(el('div', { class: 'version version--soon', 'aria-disabled': 'true' },
+        el('span', { class: 'version__abbr', text: t.abbr }),
+        el('span', { class: 'version__name', text: 'Coming soon' })));
     }
   }
   paint();

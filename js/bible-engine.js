@@ -15,6 +15,19 @@ const DATA_ROOT = 'data';
 /* ---- translation registry ------------------------------------------------ */
 export const TRANSLATIONS = [
   {
+    id: 'webster',
+    family: 'received',
+    abbr: 'Webster',
+    name: "Webster's Bible",
+    year: 1833,
+    language: 'en',
+    rights: 'public-domain',
+    notice:
+      "Noah Webster's revision of the King James Version (1833), modernising " +
+      'its language. In the public domain; its 1833 publication date places ' +
+      'it beyond any copyright term.',
+  },
+  {
     id: 'asv',
     family: 'critical',
     abbr: 'ASV',
@@ -52,19 +65,6 @@ export const TRANSLATIONS = [
       'dedicated as such by Michael Paul Johnson and eBible.org.',
   },
   {
-    id: 'webster',
-    family: 'received',
-    abbr: 'Webster',
-    name: "Webster's Bible",
-    year: 1833,
-    language: 'en',
-    rights: 'public-domain',
-    notice:
-      "Noah Webster's revision of the King James Version (1833), modernising " +
-      'its language. In the public domain; its 1833 publication date places ' +
-      'it beyond any copyright term.',
-  },
-  {
     id: 'ylt',
     family: 'received',
     abbr: 'YLT',
@@ -76,6 +76,26 @@ export const TRANSLATIONS = [
       "Robert Young's word-for-word translation (1862, revised 1898), rendered " +
       'directly from the Hebrew and Greek. In the public domain worldwide.',
   },
+];
+
+/* ---- KJV (1769): held back, and hidden -------------------------------------
+ * The 1769 Blayney text is under Crown letters patent in the UK, administered
+ * by Cambridge University Press, and is NOT included until written permission
+ * is granted. Nothing in the app mentions it while SHOW_UPCOMING is false, and
+ * it is not in TRANSLATIONS, so it cannot be selected, searched or compared.
+ *
+ * When permission arrives:
+ *   1. Put the licensed text in data/translations/kjv/<BOOK>.json (same shape
+ *      as the other translations, one file per book, 66 books).
+ *   2. Move the entry below into TRANSLATIONS (family 'received', rights
+ *      'licensed', and a notice carrying the wording CUP requires).
+ *   3. Delete it from UPCOMING, add a KJV section to legal/licences.html and
+ *      update the README and store listing ("six translations").
+ * To show a greyed "Coming soon" row in the meantime, set SHOW_UPCOMING = true.
+ */
+export const SHOW_UPCOMING = false;
+export const UPCOMING = [
+  { id: 'kjv', abbr: 'KJV', name: 'King James Version (1769)', year: 1769 },
 ];
 
 export const getTranslation = (id) =>

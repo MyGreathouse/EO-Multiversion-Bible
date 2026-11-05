@@ -59,6 +59,7 @@ export function openTranslationPicker(onPick) {
     const group = bible.TRANSLATIONS.filter((t) => era.ids.includes(t.id));
     if (!group.length) continue;
     sheet.append(el('p', { class: 'version-group', text: era.label }));
+    const soon = era.label === 'Classic' && bible.SHOW_UPCOMING ? bible.UPCOMING : [];
     for (const t of group) {
       sheet.append(el('button', {
         class: 'picker-row', 'aria-current': String(t.id === current),
@@ -77,6 +78,13 @@ export function openTranslationPicker(onPick) {
           el('span', { class: 'picker-row__meta', text: `${t.abbr} · ${t.year}` })
         )
       ));
+    }
+    for (const t of soon) {
+      sheet.append(el('div', { class: 'picker-row picker-row--soon', 'aria-disabled': 'true' },
+        el('span', { class: 'picker-row__mark', 'aria-hidden': 'true' }),
+        el('span', { class: 'picker-row__body' },
+          el('span', { class: 'picker-row__name', text: t.name }),
+          el('span', { class: 'picker-row__meta', text: `${t.abbr} · Coming soon` }))));
     }
   }
 

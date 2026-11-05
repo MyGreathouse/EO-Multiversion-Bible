@@ -4,7 +4,7 @@ import { isTranslation } from './bible-engine.js';
 
 const DEFAULTS = {
   theme: 'auto',            // auto | day | sepia | night
-  translation: 'asv',         // ASV is the primary version
+  translation: 'webster',     // Webster's is the primary version
   textSize: 18,             // px, 15–30
   leading: 1.72,            // 1.4–2.2
   measure: 34,              // rem, 26–46
@@ -22,17 +22,15 @@ const DEFAULTS = {
 let current = { ...DEFAULTS, ...store.get('settings', {}) };
 if (!isTranslation(current.translation)) current.translation = DEFAULTS.translation;
 
-/* One-time move to ASV as the primary version. Earlier builds defaulted to
- * Webster's and saved it with the other settings the first time anything
- * changed, so people who never chose a version still have 'webster' stored.
- * Those are moved to ASV once. Anyone on another version is left alone, and the
- * flag means a later deliberate choice of Webster is never overwritten. */
-if (!store.get('primaryAsvApplied', false)) {
-  if (current.translation === 'webster') {
-    current = { ...current, translation: 'asv' };
+/* Webster's is the primary version. A short-lived build moved readers to ASV
+ * (it set the primaryAsvApplied flag); that is undone once here. Anyone who
+ * chooses a version afterwards keeps their choice. */
+if (!store.get('primaryWebsterRestored', false)) {
+  if (store.get('primaryAsvApplied', false) && current.translation === 'asv') {
+    current = { ...current, translation: 'webster' };
     store.set('settings', current);
   }
-  store.set('primaryAsvApplied', true);
+  store.set('primaryWebsterRestored', true);
 }
 
 const listeners = new Set();
