@@ -107,9 +107,23 @@ export function openGoTo({ navigate, bookId = null, chapter = null, start = 'cha
   };
 
   /* ---- step 1: books ----------------------------------------------------- */
+  let tab = bible.book(bookId)?.testament || 'OT';   // which testament the tabs show
   const showBooks = (focusId = null) => {
+    const focusBook = bible.book(focusId || bookId);
+    if (focusBook) tab = focusBook.testament;
     clear(sheet);
     const list = el('div', { class: 'goto-books' });
+    const TABS = [['OT', 'Old Testament'], ['NT', 'New Testament']];
+    const seg = el('div', { class: 'seg goto-seg', role: 'group', 'aria-label': 'Testament' });
+    const paintTabs = () => {
+      for (const b of seg.children) b.setAttribute('aria-pressed', String(b.dataset.t === tab));
+    };
+    for (const [t, label] of TABS) {
+      seg.append(el('button', {
+        dataset: { t }, text: `${label} · ${bible.booksIn(t).length}`,
+        onclick: () => { tab = t; paintTabs(); paint(input.value); list.scrollTop = 0; },
+      }));
+    }
     const input = el('input', {
       type: 'search', placeholder: 'Find a book — try “genesis” or “rom”',
       'aria-label': 'Find a book', autocomplete: 'off', autocapitalize: 'off',
@@ -118,10 +132,14 @@ export function openGoTo({ navigate, bookId = null, chapter = null, start = 'cha
     const paint = (q = '') => {
       clear(list);
       let shown = 0;
-      for (const [label, testament] of [['Old Testament', 'OT'], ['New Testament', 'NT']]) {
+      // Searching spans both testaments (and the tabs step aside); otherwise show just the chosen one.
+      seg.hidden = !!q;
+      const groups = q ? [['Old Testament', 'OT'], ['New Testament', 'NT']]
+                       : TABS.filter(([t]) => t === tab).map(([t, l]) => [l, t]);
+      for (const [label, testament] of groups) {
         const found = bible.booksIn(testament).filter((b) => matches(b, q));
         if (!found.length) continue;
-        list.append(el('p', { class: 'version-group', text: label }));
+        if (q) list.append(el('p', { class: 'version-group', text: label }));
         for (const b of found) {
           shown++;
           list.append(el('button', {
@@ -150,8 +168,10 @@ export function openGoTo({ navigate, bookId = null, chapter = null, start = 'cha
       el('div', { class: 'book-filter', style: 'margin-top:.75rem' },
         el('span', { class: 'book-filter__icon', html: icon('search'), 'aria-hidden': 'true' }),
         input),
+      seg,
       list
     );
+    paintTabs();
     paint();
     const target = list.querySelector(`[data-book="${focusId || bookId}"]`);
     if (target) target.scrollIntoView({ block: 'center' });
