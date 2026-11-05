@@ -398,17 +398,20 @@ function readerTools(data, navigate, autoListen, listenBridge) {
   );
 
   const bk = bible.book(state.bookId);
-  const locator = el('button', {
-    class: 'version-trigger goto-trigger', 'aria-haspopup': 'dialog',
-    'aria-label': `Change book or chapter. Currently ${bk.name} ${state.chapter}.`,
-    onclick: () => openGoTo({ navigate, bookId: state.bookId, chapter: state.chapter }),
+  const trigger = (cls, hint, label, aria, start) => el('button', {
+    class: `version-trigger goto-trigger ${cls}`, 'aria-haspopup': 'dialog', 'aria-label': aria,
+    onclick: () => openGoTo({ navigate, bookId: state.bookId, chapter: state.chapter, start }),
   },
-    el('span', {},
-      el('span', { class: 'version-trigger__hint', text: 'Book · Chapter' }),
+    el('span', { class: 'goto-trigger__text' },
+      el('span', { class: 'version-trigger__hint', text: hint }),
       el('br'),
-      el('span', { class: 'version-trigger__label', text: `${bk.name} ${state.chapter}` })),
-    el('span', { html: icon('chevronDown'), style: 'display:contents' })
-  );
+      el('span', { class: 'version-trigger__label', text: label })),
+    el('span', { html: icon('chevronDown'), style: 'display:contents' }));
+  const bookBtn = trigger('goto-trigger--book', 'Book', bk.name,
+    `Change book. Currently ${bk.name}.`, 'books');
+  const chapterBtn = trigger('goto-trigger--chapter', 'Chapter', String(state.chapter),
+    `Change chapter. Currently chapter ${state.chapter} of ${bk.chapters.length}.`, 'chapters');
+  const lineBreak = el('span', { class: 'tools__break', 'aria-hidden': 'true' });
 
   const hint = el('p', { class: 'tools__hint', hidden: !state.compareMode,
                          text: 'Compare is on — tap any verse.' });
@@ -446,7 +449,7 @@ function readerTools(data, navigate, autoListen, listenBridge) {
       el('div', { class: 'audio-row__num-wrap' }, numberInput, el('span', { class: 'audio-row__suffix', text: '\u00d7' })));
   })() : null;
 
-  bar.append(locator, switcher, compareBtn, listenBtn);
+  bar.append(bookBtn, chapterBtn, lineBreak, switcher, compareBtn, listenBtn);
   if (autoListen) startListening();
   return el('div', {}, bar, hint, speedRow);
 }

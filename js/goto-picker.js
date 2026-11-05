@@ -7,9 +7,11 @@
  *
  *   openGoTo({ navigate, bookId, chapter })
  *
- * With a bookId it opens on that book's chapter grid (the common case: "I'm in
- * 1 Timothy 5, take me to chapter 3 / to another book"). Without one it opens
- * on the book list. Choosing a chapter navigates to the current translation.
+ * start: 'chapters' (default) opens on the current book's chapter grid; 'books'
+ * opens on the book list with the current book highlighted. With no bookId it
+ * always opens on the book list. Choosing a chapter navigates to the current
+ * translation, and the book name at the top of a chapter grid is a link that
+ * starts the book at chapter 1.
  */
 import * as bible from './bible-engine.js';
 import * as settings from './settings.js';
@@ -47,7 +49,7 @@ export function close() {
 const norm = (s) => s.toLowerCase().replace(/[.\s]/g, '');
 const matches = (b, q) => !q || norm(b.name).includes(norm(q)) || norm(b.id).includes(norm(q));
 
-export function openGoTo({ navigate, bookId = null, chapter = null }) {
+export function openGoTo({ navigate, bookId = null, chapter = null, start = 'chapters' }) {
   ensure();
   lastFocus = document.activeElement;
   const tr = settings.get('translation');
@@ -63,7 +65,7 @@ export function openGoTo({ navigate, bookId = null, chapter = null }) {
           class: 'goto-back', onclick: onBack, 'aria-label': backLabel,
         }, el('span', { html: icon('chevronLeft'), style: 'display:contents' }), backLabel)
       : null,
-    el('div', { class: 'sheet__ref', text: title }),
+    el('div', { class: 'sheet__ref', text: title || '' }),
     el('button', { class: 'icon-btn', html: icon('close'), 'aria-label': 'Close', onclick: close })
   );
 
@@ -76,9 +78,16 @@ export function openGoTo({ navigate, bookId = null, chapter = null }) {
     clear(sheet);
     sheet.append(
       el('div', { class: 'sheet__grip', 'aria-hidden': 'true' }),
-      head(b.name, 'Books', () => showBooks(b.id)),
-      el('p', { class: 'goto-sub', text: `${b.chapters.length} chapters · ${bible.getTranslation(tr).abbr}` })
+      head(null, 'Books', () => showBooks(b.id)),
+      el('p', { class: 'goto-sub', text: `${b.chapters.length} chapters · ${bible.getTranslation(tr).abbr} · tap a number, or the book name to start at chapter 1` })
     );
+    // The book itself is a link: one tap reads it from the beginning.
+    sheet.querySelector('.sheet__head .sheet__ref').replaceWith(el('button', {
+      class: 'goto-booklink', 'aria-label': `Read ${b.name} from chapter 1`,
+      onclick: () => go(b.id, 1),
+    },
+      el('span', { text: b.name }),
+      el('span', { html: icon('chevronRight'), style: 'display:contents' })));
     const grid = el('div', { class: 'goto-grid', role: 'group', 'aria-label': `${b.name} chapters` });
     let currentBtn = null;
     for (let n = 1; n <= b.chapters.length; n++) {
@@ -150,8 +159,8 @@ export function openGoTo({ navigate, bookId = null, chapter = null }) {
   };
 
   // A one-chapter book (Jude, Obadiah…) has no grid to show, so start on the book list.
-  if (bookId && bible.book(bookId)?.chapters.length > 1) showChapters(bookId, false);
-  else showBooks();
+  if (start !== 'books' && bookId && bible.book(bookId)?.chapters.length > 1) showChapters(bookId, false);
+  else showBooks(bookId);
 
   sheet.classList.add('is-open');
   backdrop.classList.add('is-open');

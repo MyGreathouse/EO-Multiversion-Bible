@@ -244,6 +244,13 @@ function renderChapters(host, bookId, navigate) {
         + `${b.chapters.reduce((a, c) => a + c, 0)} verses`,
   }));
 
+  host.append(el('button', {
+    class: 'book-link', 'aria-label': `Read ${b.name} from chapter 1`,
+    onclick: () => navigate(`#/read/${settings.get('translation')}/${b.id}/1`),
+  },
+    el('span', { text: `Read ${b.name} from the start` }),
+    el('span', { html: icon('chevronRight'), style: 'display:contents' })));
+
   host.append(el('p', { class: 'eyebrow', style: 'margin:1.5rem 0 .5rem', text: 'Version' }));
   host.append(versionPicker(() => render(host, { level: 'book', bookId }, navigate)));
 
