@@ -341,6 +341,7 @@ function readerTools(data, navigate, autoListen, listenBridge) {
       voiceURI: settings.get('readingVoice'),
       rate: settings.get('readingRate'),
       onVerseStart: (entry) => highlightSpeaking(entry.verse),
+      onProblem: (message) => { listenState = 'idle'; paintListen(); clearSpeakingHighlight(); toast(message); },
       onEnd: () => {
         const next = settings.get('autoContinueListening') ? bible.step(state.bookId, state.chapter, 1) : null;
         listenState = 'idle';

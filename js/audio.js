@@ -93,6 +93,32 @@ let activeRate = 0.85;
 // still fires onend, onerror, both, or neither -- can never act on stale
 // state and corrupt the queue position.
 let generation = 0;
+let onProblem = null;      // told when speech cannot start at all, so the app can say so instead of staying silent
+let failures = 0;          // utterances in a row that errored without ever starting
+let utterRef = null;       // keep a live reference: Chrome can garbage-collect an utterance mid-speech and never fire onend
+
+const PROBLEM = 'Couldn\u2019t start the voice. Check your phone isn\u2019t on silent, turn the volume up, and make sure a text-to-speech voice is installed.';
+
+/* Clears whatever the speech engine is holding. cancel() is only called when
+ * something is actually queued: on some phones, cancelling an idle engine makes
+ * the next speak() silently do nothing. A stuck "paused" state (left over from
+ * an earlier page or a backgrounded tab) silences everything after it, so that
+ * is released too. Returns true if the engine was busy. */
+function clearEngine() {
+  if (!isSupported()) return false;
+  const s = window.speechSynthesis;
+  const busy = s.speaking || s.pending || s.paused;
+  if (busy) s.cancel();
+  if (s.paused) s.resume();
+  return busy;
+}
+
+function fail() {
+  const cb = onProblem;
+  generation += 1; cancelled = true; queue = []; queueIndex = 0; callbacks = null; onProblem = null;
+  clearEngine();
+  cb?.(PROBLEM);
+}
 
 export const isSpeaking = () => isSupported() && (window.speechSynthesis.speaking || window.speechSynthesis.pending);
 export const isPaused = () => isSupported() && window.speechSynthesis.paused;
@@ -101,18 +127,43 @@ export const isPaused = () => isSupported() && window.speechSynthesis.paused;
  * this is what a "tap a verse to jump" control should check before acting. */
 export const isActive = () => !cancelled && queue.length > 0;
 
-function speakNext() {
+function speakNext(attempt = 0) {
   if (cancelled) return;
   if (queueIndex >= queue.length) { callbacks?.onEnd?.(); return; }
   const entry = queue[queueIndex];
   if (!entry.text) { queueIndex += 1; speakNext(); return; }
   const myGen = generation;
+  const live = () => myGen === generation && !cancelled;
   const utter = new SpeechSynthesisUtterance(entry.text);
   if (activeVoice) { try { utter.voice = activeVoice; } catch { /* stale or invalid voice object -- fall back to the device default rather than break playback */ } }
+  else utter.lang = document.documentElement.lang || 'en';
   utter.rate = activeRate;
-  utter.onstart = () => { if (myGen === generation && !cancelled) callbacks?.onVerseStart?.(entry); };
-  utter.onend = () => { if (myGen === generation && !cancelled) { queueIndex += 1; speakNext(); } };
-  utter.onerror = () => { if (myGen === generation && !cancelled) { queueIndex += 1; speakNext(); } };
+  utter.volume = 1;
+  let started = false;
+  let watchdog = setTimeout(() => {
+    // Asked to speak, but the engine never began. Try once more from a clean engine; then give up loudly.
+    if (!live() || started) return;
+    if (attempt === 0) {
+      generation += 1;               // retire the silent utterance so a late event from it can't move the queue
+      const g = generation;
+      clearEngine();
+      setTimeout(() => { if (g === generation && !cancelled) speakNext(1); }, 120);
+    }
+    else fail();
+  }, 4000);
+  const done = () => clearTimeout(watchdog);
+  utter.onstart = () => { started = true; failures = 0; done(); if (live()) callbacks?.onVerseStart?.(entry); };
+  utter.onend = () => { done(); if (live()) { queueIndex += 1; speakNext(); } };
+  utter.onerror = (e) => {
+    done();
+    if (!live()) return;
+    // 'canceled' / 'interrupted' come from our own jump or stop and are not failures.
+    if (e && (e.error === 'canceled' || e.error === 'interrupted')) return;
+    failures += 1;
+    if (!started && failures >= 2) { fail(); return; }
+    queueIndex += 1; speakNext();
+  };
+  utterRef = utter;
   window.speechSynthesis.speak(utter);
 }
 
@@ -121,17 +172,24 @@ function speakNext() {
  * playback can be paused and resumed cleanly and the entry currently being
  * read can be highlighted via onVerseStart.
  */
-export function speak(entries, { voiceURI, rate = 0.85, onVerseStart, onEnd } = {}) {
-  stop();
+export function speak(entries, { voiceURI, rate = 0.85, onVerseStart, onEnd, onProblem: problem } = {}) {
+  const busy = reset();
   if (!isSupported() || !entries || !entries.length) { onEnd?.(); return; }
 
   cancelled = false;
   queue = entries;
   queueIndex = 0;
+  failures = 0;
   callbacks = { onVerseStart, onEnd };
+  onProblem = problem || null;
   activeVoice = voiceURI ? voices.find((v) => v.voiceURI === voiceURI) : null;
   activeRate = rate;
-  speakNext();
+  // iPhones only allow speech that starts inside the tap itself, so when the
+  // engine is idle this speaks synchronously. A short gap is only needed when
+  // we have just cancelled something that was still playing.
+  const myGen = generation;
+  if (busy) setTimeout(() => { if (myGen === generation && !cancelled) speakNext(); }, 80);
+  else speakNext();
 }
 
 /**
@@ -146,10 +204,13 @@ export function jumpToVerse(verseNumber) {
   const idx = queue.findIndex((e) => e.verse === verseNumber);
   if (idx < 0) return false;
   generation += 1; // invalidate whatever utterance is currently in flight
-  if (isSupported()) window.speechSynthesis.cancel();
+  const busy = clearEngine();
   cancelled = false;
   queueIndex = idx;
-  speakNext();
+  failures = 0;
+  const myGen = generation;
+  if (busy) setTimeout(() => { if (myGen === generation && !cancelled) speakNext(); }, 80);
+  else speakNext();
   return true;
 }
 
@@ -167,22 +228,44 @@ export function pause() {
 export function resume() {
   if (isSupported() && window.speechSynthesis.paused) window.speechSynthesis.resume();
 }
-export function stop() {
+function reset() {
   generation += 1;
   cancelled = true;
   queue = [];
   queueIndex = 0;
   callbacks = null;
-  if (isSupported()) window.speechSynthesis.cancel();
+  onProblem = null;
+  return clearEngine();
+}
+export function stop() { reset(); }
+
+/** Call this straight from a tap when the verses still have to be fetched
+ * before speak(): iPhones only let a page start speech from inside the tap
+ * itself, and an await in between loses that permission. A silent, one-space
+ * utterance spoken here keeps the permission for the real speak() afterwards. */
+export function unlock() {
+  if (!isSupported()) return;
+  try {
+    const s = window.speechSynthesis;
+    if (s.paused) s.resume();
+    const u = new SpeechSynthesisUtterance(' ');
+    u.volume = 0;
+    utterRef = u;
+    s.speak(u);
+  } catch { /* harmless: the real speak() still runs */ }
 }
 
 /** A short sample used when previewing a voice in Settings. */
 export function speakSample(voiceURI, rate = 0.85, text = 'The Lord is my shepherd; I shall not want.') {
   if (!isSupported()) return;
-  window.speechSynthesis.cancel();
+  const busy = clearEngine();
   const voice = voiceURI ? voices.find((v) => v.voiceURI === voiceURI) : null;
   const utter = new SpeechSynthesisUtterance(text);
   if (voice) { try { utter.voice = voice; } catch { /* stale or invalid voice object -- fall back to the device default rather than break playback */ } }
+  else utter.lang = document.documentElement.lang || 'en';
   utter.rate = rate;
-  window.speechSynthesis.speak(utter);
+  utter.volume = 1;
+  utterRef = utter;
+  if (busy) setTimeout(() => window.speechSynthesis.speak(utter), 80);
+  else window.speechSynthesis.speak(utter);
 }

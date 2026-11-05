@@ -161,6 +161,7 @@ export function render(host, params, navigate) {
 
       const entries = study.collect(tab);
       if (!entries.length) return;
+      audio.unlock(); // keep the phone's "started by a tap" permission across the fetch below
       const withText = await Promise.all(entries.map(async (entry) => {
         const tr = entry.translation && bible.isTranslation(entry.translation)
           ? entry.translation : settings.get('translation');
@@ -177,6 +178,7 @@ export function render(host, params, navigate) {
           const row = list.querySelector(`[data-key="${entry.verse}"]`);
           if (row) { row.classList.add('row--speaking'); row.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
         },
+        onProblem: (message) => { stopListening(); toast(message); },
         onEnd: () => stopListening(),
       });
     },
