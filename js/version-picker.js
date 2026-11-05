@@ -33,8 +33,8 @@ export function close() {
 }
 
 const ERA = {
-  modern: { label: 'Modern', ids: ['bsb', 'webbe'] },
   classic: { label: 'Classic', ids: ['asv', 'webster', 'ylt'] },
+  modern: { label: 'Modern', ids: ['bsb', 'webbe'] },
 };
 
 /**
@@ -71,7 +71,9 @@ export function openTranslationPicker(onPick) {
       },
         el('span', { class: 'picker-row__mark', html: icon('check') }),
         el('span', { class: 'picker-row__body' },
-          el('span', { class: 'picker-row__name', text: t.name }),
+          el('span', { class: 'picker-row__name' },
+            t.name
+          ),
           el('span', { class: 'picker-row__meta', text: `${t.abbr} · ${t.year}` })
         )
       ));

@@ -4,6 +4,8 @@ import * as settings from './settings.js';
 import * as study from './study.js';
 import * as audio from './audio.js';
 import * as ads from './ads.js';
+import * as reminders from './reminders.js';
+import { openGoTo } from './goto-picker.js';
 import { el, clear, icon, toast } from './ui.js';
 
 import * as home from './home.js';
@@ -56,12 +58,37 @@ function parse() {
   return { segments, params };
 }
 
+/* While reading, the header title ("1 TIMOTHY 5") opens the book/chapter sheet. */
+let goToTarget = null;
+function setTitleAsGoTo(on, bookId = null, chapter = null) {
+  goToTarget = on ? { bookId, chapter } : null;
+  if (on) {
+    titleNode.setAttribute('role', 'button');
+    titleNode.tabIndex = 0;
+    titleNode.dataset.goto = '1';
+    titleNode.setAttribute('aria-haspopup', 'dialog');
+    titleNode.setAttribute('aria-label', `${bible.bookName(bookId)} ${chapter}. Change book or chapter.`);
+  } else {
+    titleNode.removeAttribute('role');
+    titleNode.removeAttribute('tabindex');
+    titleNode.removeAttribute('aria-haspopup');
+    titleNode.removeAttribute('aria-label');
+    delete titleNode.dataset.goto;
+  }
+}
+const openFromTitle = () => goToTarget && openGoTo({ navigate, ...goToTarget });
+titleNode.addEventListener('click', openFromTitle);
+titleNode.addEventListener('keydown', (e) => {
+  if (goToTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openFromTitle(); }
+});
+
 async function route() {
   const { segments, params } = parse();
   const view = segments[0] || 'home';
   reader.destroy();
   audio.stop();
   clear(outlet);
+  setTitleAsGoTo(false);
 
   try {
     switch (view) {
@@ -83,6 +110,7 @@ async function route() {
         if (!b) { navigate('#/library'); return; }
         const ch = Math.min(Math.max(parseInt(chapter, 10) || 1, 1), b.chapters.length);
         titleNode.textContent = `${b.name} ${ch}`;
+        setTitleAsGoTo(true, b.id, ch);
         setNav('#/library');
         if (translation !== settings.get('translation')) settings.set('translation', translation);
         await reader.render(outlet, {
@@ -210,6 +238,12 @@ window.addEventListener('hashchange', () => {
     navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is optional */ });
   }
   ads.init();
+
+  reminders.checkAndNotify(settings);
+  reminders.registerBackgroundSync();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') reminders.checkAndNotify(settings);
+  });
 
   currentRoute = normalise(location.hash || '/');
 

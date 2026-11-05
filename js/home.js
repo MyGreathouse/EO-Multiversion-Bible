@@ -88,7 +88,7 @@ export function showGreetingGate() {
     let text = '';
     try { text = await bible.getVerse(tr, bookId, chapter, verse); } catch { text = ''; }
     if (!text) {
-      try { text = await bible.getVerse('webster', bookId, chapter, verse); } catch { /* offline */ }
+      try { text = await bible.getVerse('asv', bookId, chapter, verse); } catch { /* offline */ }
     }
 
     const appRoot = document.querySelector('.app');

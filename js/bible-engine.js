@@ -15,6 +15,19 @@ const DATA_ROOT = 'data';
 /* ---- translation registry ------------------------------------------------ */
 export const TRANSLATIONS = [
   {
+    id: 'asv',
+    family: 'critical',
+    abbr: 'ASV',
+    name: 'American Standard Version',
+    year: 1901,
+    language: 'en',
+    rights: 'public-domain',
+    notice:
+      'The American Standard Version (1901) is in the public domain; its ' +
+      'copyright, held by Thomas Nelson & Sons and later the International ' +
+      'Council of Religious Education, has expired.',
+  },
+  {
     id: 'bsb',
     family: 'critical',
     abbr: 'BSB',
@@ -37,19 +50,6 @@ export const TRANSLATIONS = [
     notice:
       'The World English Bible, British Edition is in the public domain, ' +
       'dedicated as such by Michael Paul Johnson and eBible.org.',
-  },
-  {
-    id: 'asv',
-    family: 'critical',
-    abbr: 'ASV',
-    name: 'American Standard Version',
-    year: 1901,
-    language: 'en',
-    rights: 'public-domain',
-    notice:
-      'The American Standard Version (1901) is in the public domain; its ' +
-      'copyright, held by Thomas Nelson & Sons and later the International ' +
-      'Council of Religious Education, has expired.',
   },
   {
     id: 'webster',

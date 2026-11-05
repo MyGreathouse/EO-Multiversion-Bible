@@ -44,8 +44,8 @@ function versionPicker(onChange) {
     }
   };
   const groups = [
-    { label: 'Modern', ids: ['bsb', 'webbe'] },
     { label: 'Classic', ids: ['asv', 'webster', 'ylt'] },
+    { label: 'Modern', ids: ['bsb', 'webbe'] },
   ];
   for (const g of groups) {
     const set = bible.TRANSLATIONS.filter((t) => g.ids.includes(t.id));

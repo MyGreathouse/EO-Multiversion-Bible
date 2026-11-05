@@ -3,6 +3,7 @@ import * as bible from './bible-engine.js';
 import * as settings from './settings.js';
 import * as study from './study.js';
 import * as audio from './audio.js';
+import { openGoTo } from './goto-picker.js';
 import { el, clear, icon, toast } from './ui.js';
 
 const TABS = [
@@ -103,6 +104,18 @@ export function render(host, params, navigate) {
     style: 'font-family:var(--serif); font-size:1.75rem; font-weight:550; margin:.35rem 0 1.25rem; letter-spacing:-.01em',
     text: 'What you have kept',
   }));
+
+  host.append(el('button', {
+    class: 'version-trigger goto-trigger', 'aria-haspopup': 'dialog',
+    style: 'margin:0 0 1.25rem; width:100%',
+    'aria-label': 'Go to a book and chapter',
+    onclick: () => openGoTo({ navigate }),
+  },
+    el('span', {},
+      el('span', { class: 'version-trigger__hint', text: 'Open the Bible' }),
+      el('br'),
+      el('span', { class: 'version-trigger__label', text: 'Go to book & chapter' })),
+    el('span', { html: icon('chevronDown'), style: 'display:contents' })));
 
   const seg = el('div', { class: 'seg', role: 'group', 'aria-label': 'Saved items' });
   const list = el('div');

@@ -10,6 +10,7 @@ import { el, clear, icon, toast, copyText, shareText } from './ui.js';
 import { openCompare } from './compare.js';
 import { openCrossReferences } from './cross-refs-view.js';
 import { openTranslationPicker } from './version-picker.js';
+import { openGoTo } from './goto-picker.js';
 
 let state = null;      // { translation, bookId, chapter, focusVerse }
 let railFill = null;
@@ -396,6 +397,19 @@ function readerTools(data, navigate, autoListen, listenBridge) {
     el('span', { html: icon('chevronDown'), style: 'display:contents' })
   );
 
+  const bk = bible.book(state.bookId);
+  const locator = el('button', {
+    class: 'version-trigger goto-trigger', 'aria-haspopup': 'dialog',
+    'aria-label': `Change book or chapter. Currently ${bk.name} ${state.chapter}.`,
+    onclick: () => openGoTo({ navigate, bookId: state.bookId, chapter: state.chapter }),
+  },
+    el('span', {},
+      el('span', { class: 'version-trigger__hint', text: 'Book · Chapter' }),
+      el('br'),
+      el('span', { class: 'version-trigger__label', text: `${bk.name} ${state.chapter}` })),
+    el('span', { html: icon('chevronDown'), style: 'display:contents' })
+  );
+
   const hint = el('p', { class: 'tools__hint', hidden: !state.compareMode,
                          text: 'Compare is on — tap any verse.' });
 
@@ -432,7 +446,7 @@ function readerTools(data, navigate, autoListen, listenBridge) {
       el('div', { class: 'audio-row__num-wrap' }, numberInput, el('span', { class: 'audio-row__suffix', text: '\u00d7' })));
   })() : null;
 
-  bar.append(switcher, compareBtn, listenBtn);
+  bar.append(locator, switcher, compareBtn, listenBtn);
   if (autoListen) startListening();
   return el('div', {}, bar, hint, speedRow);
 }
