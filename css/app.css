@@ -1201,3 +1201,7 @@ input[type='range'] {
 
 /* version list: the name and its abbreviation sit on separate lines */
 .picker-row__name, .picker-row__meta { display: block; }
+
+/* Old / New Testament tabs in the book picker */
+.sheet--goto .goto-seg { margin-bottom: var(--sp-3); }
+.sheet--goto .goto-seg button { flex: 1 1 0; white-space: nowrap; }
