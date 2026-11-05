@@ -7,7 +7,7 @@
  *                is immutable, so once a book is saved it is simply kept.
  */
 const VERSION = 'v1';
-const SHELL = `eo-shell-${VERSION}`;
+const SHELL = 'eo-shell-v2'; // bumped for the Go-to sheet; Scripture cache is kept
 const SCRIPTURE = `eo-scripture-${VERSION}`;
 const KEEP = new Set([SHELL, SCRIPTURE]);
 
@@ -29,6 +29,17 @@ const PRECACHE = [
   'js/compare.js',
   'js/study-view.js',
   'js/settings-view.js',
+  'js/version-picker.js',
+  'js/goto-picker.js',
+  'js/cross-refs.js',
+  'js/cross-refs-view.js',
+  'js/plans.js',
+  'js/plans-view.js',
+  'js/audio.js',
+  'js/reminders.js',
+  'js/ads-config.js',
+  'js/ads.js',
+  'js/consent.js',
   'assets/fonts/literata.woff2',
   'assets/fonts/literata-italic.woff2',
   'assets/fonts/archivo.woff2',
@@ -37,6 +48,7 @@ const PRECACHE = [
   'legal/privacy.html',
   'legal/terms.html',
   'legal/licences.html',
+  'legal/faq.html',
 ];
 
 self.addEventListener('install', (event) => {

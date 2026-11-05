@@ -18,6 +18,8 @@ Created under the EO / Elias Okafor personal brand. *Ideas. Purpose. Impact.*
 - Psalms, Proverbs, Job and the prophets set as poetry with proper indent levels
 - Find any book instantly by typing a few letters — name or 3-letter id — from
   the library or from within a testament, no scrolling required
+- **ASV is the primary version** (the default for new readers)
+- Change book and chapter from wherever you are: tap the title in the header or the **Book · Chapter** button while reading, or **Go to book & chapter** in Study — no trip back to Home or the Library
 - Book → chapter → verse navigation, with previous/next crossing book boundaries
 - Swipe left/right anywhere in a chapter to move between chapters, or use the
   buttons at the end of each chapter
@@ -45,12 +47,14 @@ python3 -m http.server 8080
 
 ## Deploying
 
-Push to GitHub, then import the repository in Vercel. No build step and no
+The site is hosted on Cloudflare (Workers static assets) at https://eobibles.com.
+Push to GitHub and Cloudflare deploys automatically. No build step and no
 environment variables are required — it is a static site.
 
-`vercel.json` sets long-lived immutable caching for Scripture files and fonts,
-`no-cache` for the service worker, and a strict Content-Security-Policy that
-permits no external origins.
+`wrangler.jsonc` points Cloudflare at the project root, `.assetsignore` keeps
+non-site files out of the deploy, and `_headers` sets long-lived immutable
+caching for Scripture files and fonts, `no-cache` for the service worker, and
+a strict Content-Security-Policy that permits no external origins.
 
 ## Layout
 
@@ -58,7 +62,8 @@ permits no external origins.
 index.html              application shell
 manifest.webmanifest    PWA manifest
 sw.js                   service worker (shell + Scripture caching)
-vercel.json             headers and caching
+_headers                headers and caching
+wrangler.jsonc          Cloudflare deploy config
 css/app.css             design system and all styling
 js/
   app.js                shell, hash router, translation switcher
@@ -66,7 +71,7 @@ js/
   storage.js            device-local storage with in-memory fallback
   settings.js           reading appearance and preferences
   study.js              bookmarks, highlights, notes, favourites, position
-  home.js  library.js  reader.js  search.js  compare.js
+  home.js  library.js  reader.js  search.js  compare.js  goto-picker.js
   study-view.js  settings-view.js  ui.js
 data/
   canon.json            book names, testaments, chapter and verse counts
