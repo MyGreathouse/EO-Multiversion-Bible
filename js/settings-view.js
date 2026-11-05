@@ -3,6 +3,7 @@ import * as bible from './bible-engine.js';
 import * as settings from './settings.js';
 import * as store from './storage.js';
 import * as audio from './audio.js';
+import * as reminders from './reminders.js';
 import * as consent from './consent.js';
 import { ADS_CONFIG } from './ads-config.js';
 import { el, clear, icon, toast, copyText } from './ui.js';
@@ -83,6 +84,43 @@ export function render(host, params, navigate) {
     greetingSelect.append(el('option', { value: v, selected: settings.get('greetingMode') === v }, l));
   }
   host.append(row('Daily greeting', 'How the verse of the day greets you each morning.', greetingSelect));
+
+  /* ---- daily reminder ---- */
+  host.append(sectionTitle('Daily Reminder'));
+  if (!reminders.isSupported()) {
+    host.append(el('p', { class: 'legal', style: 'padding:.5rem 0' },
+      'This browser doesn\u2019t support notifications.'));
+  } else {
+    const cfg = settings.get('dailyReminder');
+    const timeInput = el('input', {
+      type: 'time', value: cfg.time, disabled: !cfg.enabled,
+      'aria-label': 'Reminder time',
+      onchange: (e) => settings.set('dailyReminder', { ...settings.get('dailyReminder'), time: e.target.value }),
+    });
+    const reminderToggle = el('button', {
+      class: 'btn', role: 'switch',
+      'aria-checked': String(cfg.enabled),
+      text: cfg.enabled ? 'On' : 'Off',
+      onclick: async () => {
+        const next = !settings.get('dailyReminder').enabled;
+        if (next && reminders.permission() !== 'granted') {
+          const result = await reminders.requestPermission();
+          if (result !== 'granted') {
+            toast('Notifications are blocked for this site \u2014 turn them on in your browser settings first.');
+            return;
+          }
+        }
+        settings.set('dailyReminder', { ...settings.get('dailyReminder'), enabled: next });
+        reminderToggle.setAttribute('aria-checked', String(next));
+        reminderToggle.textContent = next ? 'On' : 'Off';
+        timeInput.disabled = !next;
+      },
+    });
+    host.append(row('Remind me to read', 'Nudges you when you next open the app if today\u2019s time has passed and you haven\u2019t read yet.', reminderToggle));
+    host.append(row('Reminder time', 'Defaults to 5am.', timeInput));
+    host.append(el('p', { class: 'legal', style: 'padding-top:.25rem' },
+      'This checks when you open the app \u2014 it can\u2019t wake a closed app at an exact time. On some Android devices it may also nudge in the background; on iPhone it only works while the app is open.'));
+  }
 
   /* ---- read aloud ---- */
   const readAloudTitle = sectionTitle('Read aloud');
