@@ -1194,3 +1194,10 @@ input[type='range'] {
   touch-action: manipulation; -webkit-tap-highlight-color: transparent;
 }
 .book-link svg { width: 1rem; height: 1rem; }
+
+/* ---- upcoming translation (only rendered when SHOW_UPCOMING is on) ------- */
+.picker-row--soon, .version--soon { opacity: .55; cursor: default; pointer-events: none; }
+.version--soon { border: 1px dashed var(--rule); border-radius: 10px; display: grid; align-content: center; padding: .6rem; text-align: center; }
+
+/* version list: the name and its abbreviation sit on separate lines */
+.picker-row__name, .picker-row__meta { display: block; }
