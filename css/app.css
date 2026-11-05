@@ -1126,6 +1126,19 @@ input[type='range'] {
 .topbar__title[data-goto]:hover { background: var(--surface-2); }
 .topbar__title[data-goto]:focus-visible { outline: 2px solid var(--accent-bright); outline-offset: 1px; }
 .goto-trigger { flex: 1 1 100%; width: 100%; text-align: left; }
+.tools__break { flex: 0 0 100%; height: 0; }
+.tools .goto-trigger { width: auto; min-width: 0; }
+.goto-trigger--book { flex: 2 1 0; }
+.goto-trigger--chapter { flex: 1 1 0; }
+.goto-trigger__text { min-width: 0; overflow: hidden; }
+.goto-trigger__text .version-trigger__label {
+  display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  vertical-align: bottom;
+}
+/* The book stands out in the accent colour; the chapter keeps the quiet default. */
+.goto-trigger--book { border-color: var(--accent-bright); background: var(--surface); }
+.goto-trigger--book .version-trigger__label, .goto-trigger--book .version-trigger__hint { color: var(--accent); }
+.goto-trigger--book svg { color: var(--accent); }
 .sheet--goto {
   max-width: 36rem; margin-inline: auto;
   display: flex; flex-direction: column; height: min(82dvh, 44rem); overflow: hidden;
@@ -1159,3 +1172,25 @@ input[type='range'] {
 .goto-ch:hover { border-color: var(--accent-bright); }
 .goto-ch:active { transform: scale(.94); }
 .goto-ch[aria-current='true'] { background: var(--brand); border-color: var(--brand); color: var(--bg); }
+
+/* ---- the book as a link ---------------------------------------------------- */
+.goto-booklink {
+  display: inline-flex; align-items: center; gap: .25rem; flex: 1; min-width: 0; justify-content: flex-start;
+  min-height: 2.75rem; padding: 0 .25rem; border-radius: 9px; text-align: left;
+  font-family: var(--serif); font-size: 1.125rem; font-weight: 650; color: var(--accent);
+  text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.goto-booklink span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.goto-booklink svg { width: 1.1rem; height: 1.1rem; flex: none; }
+.goto-booklink:hover { background: var(--surface-2); }
+.goto-booklink:focus-visible, .book-link:focus-visible { outline: 2px solid var(--accent-bright); outline-offset: 2px; }
+.sheet--goto .book-row__name { color: var(--accent); }
+.sheet--goto .book-row[aria-current='true'] .book-row__name { font-weight: 700; }
+.book-link {
+  display: inline-flex; align-items: center; gap: .3rem; margin: .25rem 0 0; padding: .5rem 0;
+  font-size: .9375rem; font-weight: 650; color: var(--accent);
+  text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.book-link svg { width: 1rem; height: 1rem; }
