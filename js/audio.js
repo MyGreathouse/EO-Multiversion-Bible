@@ -136,7 +136,7 @@ function speakNext(attempt = 0) {
   const live = () => myGen === generation && !cancelled;
   const utter = new SpeechSynthesisUtterance(entry.text);
   if (activeVoice) { try { utter.voice = activeVoice; } catch { /* stale or invalid voice object -- fall back to the device default rather than break playback */ } }
-  else utter.lang = document.documentElement.lang || 'en';
+  else utter.lang = 'en-GB'; // a full locale code: iPhones can ignore a bare 'en'
   utter.rate = activeRate;
   utter.volume = 1;
   let started = false;
@@ -262,7 +262,7 @@ export function speakSample(voiceURI, rate = 0.85, text = 'The Lord is my shephe
   const voice = voiceURI ? voices.find((v) => v.voiceURI === voiceURI) : null;
   const utter = new SpeechSynthesisUtterance(text);
   if (voice) { try { utter.voice = voice; } catch { /* stale or invalid voice object -- fall back to the device default rather than break playback */ } }
-  else utter.lang = document.documentElement.lang || 'en';
+  else utter.lang = 'en-GB'; // a full locale code: iPhones can ignore a bare 'en'
   utter.rate = rate;
   utter.volume = 1;
   utterRef = utter;
