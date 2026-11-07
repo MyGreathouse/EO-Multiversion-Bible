@@ -31,6 +31,7 @@ const PRECACHE = [
   'js/settings-view.js',
   'js/version-picker.js',
   'js/goto-picker.js',
+  'js/speed-control.js',
   'js/cross-refs.js',
   'js/cross-refs-view.js',
   'js/plans.js',
