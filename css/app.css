@@ -1205,3 +1205,37 @@ input[type='range'] {
 /* Old / New Testament tabs in the book picker */
 .sheet--goto .goto-seg { margin-bottom: var(--sp-3); }
 .sheet--goto .goto-seg button { flex: 1 1 0; white-space: nowrap; }
+
+/* The daily-verse screen is always dark, so its logo must be light in every theme. */
+.gate__mark .monogram { color: #E9E9E6; }
+
+/* Narrow phones (360px is common): let Version share a row with Compare and Listen. */
+@media (max-width: 389px) {
+  .tools .version-trigger:not(.goto-trigger) { flex: 1 1 0; min-width: 0; padding-inline: .65rem; gap: .35rem; }
+  .tools .tool { padding-inline: .7rem; }
+}
+@media (max-width: 339px) {
+  .tools .version-trigger:not(.goto-trigger) { flex: 1 1 100%; }
+}
+
+/* ---- reading speed: quick picks and note ---- */
+.speed-control { width: 100%; }
+.speed-chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+.speed-chip {
+  font: inherit; font-size: .8125rem; font-variant-numeric: tabular-nums;
+  padding: .35rem .7rem; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border, rgba(127,127,127,.35)); background: transparent; color: var(--text-2);
+}
+.speed-chip[aria-pressed='true'] { color: var(--text); border-color: currentColor; font-weight: 600; }
+.speed-note { margin: .5rem 0 0; font-size: .75rem; line-height: 1.45; color: var(--text-2); }
+.speed-control--compact .speed-note { display: none; }
+.voice-tips { margin: .25rem 0 .5rem; font-size: .8125rem; color: var(--text-2); }
+.voice-tips summary { cursor: pointer; font-weight: 600; color: var(--text); padding: .4rem 0; }
+.voice-tips p { margin: .4rem 0; line-height: 1.5; }
+
+/* the voice picker must never push the Preview button off a narrow screen, even with long voice names */
+.row select { min-width: 0; max-width: 100%; text-overflow: ellipsis; }
+.row div:has(> select) { min-width: 0; max-width: 100%; }
+.row div:has(> select) > select { flex: 1 1 auto; }
+.row div:has(> select) > .btn { flex: none; }
+.speed-control--compact { margin-bottom: 1rem; }
