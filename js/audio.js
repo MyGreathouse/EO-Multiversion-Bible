@@ -12,6 +12,15 @@ let voicesPromise = null;
 
 export const isSupported = () => 'speechSynthesis' in window;
 
+/* Reading speed limits. The browser accepts 0.1 to 10; 0.1 to 2 covers very slow
+ * following-along through to brisk listening without anything absurd. */
+export const RATE_MIN = 0.1;
+export const RATE_MAX = 2;
+export const clampRate = (v) => {
+  const n = parseFloat(v);
+  return Math.min(RATE_MAX, Math.max(RATE_MIN, Number.isFinite(n) ? n : 0.85));
+};
+
 function loadVoices() {
   if (voicesPromise) return voicesPromise;
   voicesPromise = new Promise((resolve) => {
@@ -78,6 +87,24 @@ export function classifyAccent(voice) {
   const lang = voice?.lang || '';
   const match = ACCENT_GROUPS.find((g) => g.test(lang));
   return match ? match.label : (lang.split('-')[0].toUpperCase() || 'Other') + ' / other';
+}
+
+/* Voice quality, judged only from what a device says about its own voices.
+ * 3 = the device's best (names such as Premium, Natural, Neural, Studio);
+ * 2 = Enhanced or Google's network-quality voices;
+ * 1 = ordinary built-in voices;
+ * 0 = known robotic or novelty voices (compact, eSpeak, the Mac novelty set).
+ * Nothing is invented: a phone with no better voice installed simply has none to show. */
+const TIER3 = /premium|natural|neural|studio|wavenet|siri/i;
+const TIER2 = /enhanced|google|online/i;
+const TIER0 = /espeak|compact|robot|novelty|albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|junior|kathy|pipe organ|ralph|trinoids|whisper|wobble|zarvox|fred/i;
+
+export function voiceQuality(voice) {
+  const n = voice?.name || '';
+  if (TIER0.test(n)) return 0;
+  if (TIER3.test(n)) return 3;
+  if (TIER2.test(n)) return 2;
+  return 1;
 }
 
 export const ACCENT_ORDER = [...ACCENT_GROUPS.map((g) => g.label), null]; // null = catch-all "Other"
@@ -183,7 +210,7 @@ export function speak(entries, { voiceURI, rate = 0.85, onVerseStart, onEnd, onP
   callbacks = { onVerseStart, onEnd };
   onProblem = problem || null;
   activeVoice = voiceURI ? voices.find((v) => v.voiceURI === voiceURI) : null;
-  activeRate = rate;
+  activeRate = clampRate(rate);
   // iPhones only allow speech that starts inside the tap itself, so when the
   // engine is idle this speaks synchronously. A short gap is only needed when
   // we have just cancelled something that was still playing.
@@ -219,7 +246,7 @@ export function jumpToVerse(verseNumber) {
  * to do that), but every verse from here on will use the new rate. Safe to
  * call whether or not anything is currently playing. */
 export function setRate(rate) {
-  activeRate = rate;
+  activeRate = clampRate(rate);
 }
 
 export function pause() {
@@ -263,7 +290,7 @@ export function speakSample(voiceURI, rate = 0.85, text = 'The Lord is my shephe
   const utter = new SpeechSynthesisUtterance(text);
   if (voice) { try { utter.voice = voice; } catch { /* stale or invalid voice object -- fall back to the device default rather than break playback */ } }
   else utter.lang = 'en-GB'; // a full locale code: iPhones can ignore a bare 'en'
-  utter.rate = rate;
+  utter.rate = clampRate(rate);
   utter.volume = 1;
   utterRef = utter;
   if (busy) setTimeout(() => window.speechSynthesis.speak(utter), 80);

@@ -3,6 +3,7 @@ import * as bible from './bible-engine.js';
 import * as settings from './settings.js';
 import * as store from './storage.js';
 import * as audio from './audio.js';
+import { speedControl } from './speed-control.js';
 import * as reminders from './reminders.js';
 import * as consent from './consent.js';
 import { ADS_CONFIG } from './ads-config.js';
@@ -154,13 +155,15 @@ export function render(host, params, navigate) {
       for (const accent of orderedAccents) {
         const list = byAccent.get(accent);
         if (!list?.length) continue;
+        // Best-sounding first (the device's own naming decides), then by name.
+        list.sort((a, b) => (audio.voiceQuality(b) - audio.voiceQuality(a)) || a.name.localeCompare(b.name));
         const optgroup = el('optgroup', { label: accent });
         for (const v of list) {
           const gender = genderLabel[audio.classifyVoice(v)];
           optgroup.append(el('option', {
             value: v.voiceURI,
             selected: settings.get('readingVoice') === v.voiceURI,
-          }, `${v.name}${gender ? ` (${gender})` : ''}`));
+          }, `${audio.voiceQuality(v) >= 2 ? '\u2605 ' : ''}${v.name}${gender ? ` (${gender})` : ''}`));
         }
         voiceSelect.append(optgroup);
       }
@@ -168,7 +171,13 @@ export function render(host, params, navigate) {
     voiceSelect.addEventListener('change', () => settings.set('readingVoice', voiceSelect.value || null));
     host.append(row('Voice', 'Grouped by language and accent, using whatever this device actually offers \u2014 coverage varies by phone and browser.',
       el('div', { style: 'display:flex; gap:.5rem; align-items:center' }, voiceSelect, previewBtn)));
-    host.append(rangeRow('Reading speed', 'readingRate', 0.5, 1, 0.05, (v) => `${(+v).toFixed(2)}\u00d7`));
+    host.append(row('Reading speed', 'Choose a quick speed, drag the slider, or type your own from 0.1\u00d7 to 2\u00d7.', speedControl()));
+    host.append(el('details', { class: 'voice-tips' },
+      el('summary', { text: 'Want a more natural voice?' }),
+      el('p', { text: 'This app speaks with the voices already on your device, so the best way to improve the sound is to add a better one to your phone. Voices marked \u2605 are the most natural this device offers.' }),
+      el('p', {}, el('strong', { text: 'iPhone: ' }), 'Settings \u2192 Accessibility \u2192 Spoken Content \u2192 Voices \u2192 English. Pick a voice (British or American) and download the Enhanced or Premium version, then choose it above.'),
+      el('p', {}, el('strong', { text: 'Android: ' }), 'Settings \u2192 System \u2192 Languages \u2192 Text-to-speech output \u2192 Google Text-to-speech \u2192 Install voice data (English), then choose a voice.'),
+      el('p', {}, el('strong', { text: 'Windows / Edge: ' }), 'Microsoft Edge includes \u201cNatural\u201d online voices that sound far less robotic. Use Edge, then choose one above.')));
     host.append(row('Keep reading into the next chapter',
       'When a chapter finishes, carry straight on rather than stopping.',
       toggle('autoContinueListening')));

@@ -14,7 +14,7 @@ const DEFAULTS = {
   poetryLayout: 'lines',    // lines | prose
   greetingMode: 'auto',     // auto | morning | afternoon | evening
   readingVoice: null,       // a voiceURI, or null for the device default
-  readingRate: 0.85,        // 0.5-1.0, how fast the Listen feature reads
+  readingRate: 0.85,        // 0.1-2.0, how fast the Listen feature reads (any value the reader types)
   autoContinueListening: false,
   dailyReminder: { enabled: false, time: '05:00' },
 };
